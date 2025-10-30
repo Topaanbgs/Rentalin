@@ -59,10 +59,10 @@ class UserSeeder extends Seeder
                 'total_limit' => 0,
                 'used_limit' => 0,
                 'trust_score' => 100,
-                'status' => 'active',
+                'status' => $member->is_verified ? 'active' : 'blocked',
             ]);
             
-            // Calculate and update limit
+            // Calculate and update limit (only for verified users)
             $account->updateLimit();
         }
 

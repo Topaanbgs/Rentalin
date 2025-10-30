@@ -41,9 +41,14 @@ class PaylaterAccount extends Model
     // Calculate limit based on trust score
     public function calculateLimit()
     {
-        $baseLimit = 30000; // Rp 30k
-        $multiplier = 500;  // Rp 500 per trust score point
-        $verificationBonus = $this->user->is_verified ? 20000 : 0;
+    // Unverified = 0 limit
+        if (!$this->user->is_verified) {
+            return 0;
+        }
+
+        $baseLimit = 30000;
+        $multiplier = 500;
+        $verificationBonus = 20000;
 
         return $baseLimit + ($this->trust_score * $multiplier) + $verificationBonus;
     }
@@ -56,7 +61,8 @@ class PaylaterAccount extends Model
 
     // Check if can use paylater
     public function canUsePaylater($amount = 0)
-    {
+{
+        // Check status first
         if ($this->status === 'blocked') {
             return false;
         }

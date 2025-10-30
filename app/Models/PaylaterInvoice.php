@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class PaylaterInvoice extends Model
 {
@@ -24,7 +25,7 @@ class PaylaterInvoice extends Model
         return [
             'total_amount' => 'decimal:2',
             'paid_amount' => 'decimal:2',
-            'due_date' => 'date',
+            'due_date' => 'datetime',
             'paid_at' => 'datetime',
         ];
     }

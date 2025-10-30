@@ -48,7 +48,7 @@ class RegisteredUserController extends Controller
                 'total_limit' => 0,
                 'used_limit' => 0,
                 'trust_score' => 100,
-                'status' => 'active',
+                'status' => 'blocked',
             ]);
         }
 

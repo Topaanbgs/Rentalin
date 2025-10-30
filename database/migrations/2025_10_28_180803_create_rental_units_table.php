@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('rental_units', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->enum('type', ['PS4', 'PS5', 'PS4_PRO', 'PS5_DIGITAL']);
+            $table->string('type', 20);
             $table->decimal('hourly_rate', 10, 2);
             $table->enum('status', ['available', 'booked', 'in_use', 'maintenance'])->default('available');
             $table->text('description')->nullable();

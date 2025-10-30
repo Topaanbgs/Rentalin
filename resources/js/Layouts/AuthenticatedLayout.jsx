@@ -25,13 +25,13 @@ export default function AuthenticatedLayout({ header, children }) {
                       icon: LayoutDashboard,
                   },
                   {
-                      name: "Rental Units",
+                      name: "Unit Rental",
                       href: "admin.units.index",
                       icon: Gamepad2,
                       match: "admin.units.*",
                   },
                   {
-                      name: "Transactions",
+                      name: "Transaksi",
                       href: "admin.transactions.index",
                       icon: Receipt,
                       match: "admin.transactions.*",
@@ -43,24 +43,27 @@ export default function AuthenticatedLayout({ header, children }) {
                       match: "admin.members.*",
                   },
               ]
-            : [{ name: "Dashboard", href: "dashboard", icon: LayoutDashboard }];
+            : [{ name: "Dasbor", href: "dashboard", icon: LayoutDashboard }];
 
     const isActive = (item) => {
         return route().current(item.match || item.href);
     };
 
+    const translateRole = (role) => {
+        if (role === "staff") return "Staf";
+        if (role === "admin") return "Admin";
+        return "Anggota";
+    };
+
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-gray-100">
             {/* Sidebar Desktop */}
             <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-                <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gradient-to-b from-[#0066CC] to-[#0052A3] px-6 pb-4">
+                <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gradient-to-r from-[#0066CC] to-[#0052A3] px-6 pb-4">
                     <div className="flex h-16 shrink-0 items-center">
                         <Link href="/">
-                            <ApplicationLogo className="h-8 w-auto fill-white" />
+                            <ApplicationLogo className="h-auto w-auto fill-white" />
                         </Link>
-                        <span className="ml-3 text-xl font-bold text-white">
-                            Rentalin
-                        </span>
                     </div>
                     <nav className="flex flex-1 flex-col">
                         <ul
@@ -81,15 +84,15 @@ export default function AuthenticatedLayout({ header, children }) {
                                                         transition-all duration-200
                                                         ${
                                                             active
-                                                                ? "bg-[#B4E4CE] text-[#0066CC] shadow-lg"
-                                                                : "text-white hover:bg-white/10 hover:text-[#B4E4CE]"
+                                                                ? "bg-white text-blue-600 shadow-lg"
+                                                                : "text-white hover:bg-white/20"
                                                         }
                                                     `}
                                                 >
                                                     <Icon
                                                         className={`h-5 w-5 shrink-0 ${
                                                             active
-                                                                ? "text-[#0066CC]"
+                                                                ? "text-blue-600"
                                                                 : "text-white"
                                                         }`}
                                                     />
@@ -112,7 +115,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         className="fixed inset-0 z-40 bg-gray-900/80 lg:hidden"
                         onClick={() => setSidebarOpen(false)}
                     />
-                    <div className="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-[#0066CC] to-[#0052A3] lg:hidden">
+                    <div className="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-r from-[#0066CC] to-[#0052A3] lg:hidden">
                         <div className="flex h-16 items-center justify-between px-6">
                             <Link href="/">
                                 <ApplicationLogo className="h-8 w-auto fill-white" />
@@ -137,8 +140,8 @@ export default function AuthenticatedLayout({ header, children }) {
                                                     group flex gap-x-3 rounded-md p-3 text-sm font-semibold
                                                     ${
                                                         active
-                                                            ? "bg-[#B4E4CE] text-[#0066CC]"
-                                                            : "text-white hover:bg-white/10"
+                                                            ? "bg-white text-blue-600"
+                                                            : "text-white hover:bg-white/20"
                                                     }
                                                 `}
                                                 onClick={() =>
@@ -185,11 +188,11 @@ export default function AuthenticatedLayout({ header, children }) {
                             {/* Profile Dropdown */}
                             <Dropdown>
                                 <Dropdown.Trigger>
-                                    <button className="flex items-center gap-x-3 rounded-full bg-gradient-to-r from-[#0066CC] to-[#0052A3] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition">
+                                    <button className="flex items-center gap-x-3 rounded-full bg-gradient-to-r from-[#0066CC] to-[#0052A3] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition shadow-sm">
                                         <span className="hidden lg:inline">
                                             {user.name}
                                         </span>
-                                        <div className="h-8 w-8 rounded-full bg-[#B4E4CE] flex items-center justify-center text-[#0066CC] font-bold">
+                                        <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center text-[#0066CC] font-bold">
                                             {user.name.charAt(0).toUpperCase()}
                                         </div>
                                     </button>
@@ -203,12 +206,12 @@ export default function AuthenticatedLayout({ header, children }) {
                                         <p className="text-xs text-gray-500">
                                             {user.email}
                                         </p>
-                                        <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full bg-[#B4E4CE] text-[#0066CC]">
-                                            {user.role}
+                                        <span className="mt-1 inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700 capitalize">
+                                            {translateRole(user.role)}
                                         </span>
                                     </div>
                                     <Dropdown.Link href={route("profile.edit")}>
-                                        Profile Settings
+                                        Pengaturan Profil
                                     </Dropdown.Link>
                                     <Dropdown.Link
                                         href={route("logout")}
@@ -216,7 +219,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                         as="button"
                                         className="text-red-600"
                                     >
-                                        Log Out
+                                        Keluar
                                     </Dropdown.Link>
                                 </Dropdown.Content>
                             </Dropdown>

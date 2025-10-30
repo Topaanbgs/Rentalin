@@ -1,6 +1,16 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router, Link } from "@inertiajs/react";
-import { ArrowLeft, CheckCircle, XCircle, Clock } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock, XCircle } from "lucide-react";
+
+// Komponen helper untuk menampilkan item info
+const InfoItem = ({ label, value, children, className = "" }) => (
+    <div className={`py-3 sm:py-4 px-4 ${className}`}>
+        <dt className="text-sm font-medium text-gray-500">{label}</dt>
+        <dd className="mt-1 text-sm text-gray-900 font-semibold">
+            {value || children || "-"}
+        </dd>
+    </div>
+);
 
 export default function Show({ transaction }) {
     const formatCurrency = (amount) => {
@@ -12,188 +22,280 @@ export default function Show({ transaction }) {
     };
 
     const formatDateTime = (date) => {
-        return date ? new Date(date).toLocaleString("id-ID") : "-";
+        if (!date) return "-";
+        return new Date(date).toLocaleString("id-ID", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "Asia/Makassar",
+        });
+    };
+
+    const translateStatus = (status) => {
+        const map = {
+            pending_payment: "Menunggu Pembayaran",
+            confirmed: "Terkonfirmasi",
+            grace_period_active: "Masa Tenggang",
+            checked_in: "Sudah Masuk",
+            in_progress: "Sedang Berlangsung",
+            completed: "Selesai",
+            cancelled: "Dibatalkan",
+            cancelled_no_show: "Batal (Tidak Hadir)",
+        };
+        return map[status] || status.replace(/_/g, " ");
+    };
+
+    const getStatusBadge = (status) => {
+        const badges = {
+            pending_payment: { bg: "bg-yellow-100", text: "text-yellow-800" },
+            confirmed: { bg: "bg-blue-100", text: "text-blue-800" },
+            grace_period_active: {
+                bg: "bg-orange-100",
+                text: "text-orange-800",
+            },
+            checked_in: { bg: "bg-cyan-100", text: "text-cyan-800" },
+            in_progress: { bg: "bg-green-100", text: "text-green-800" },
+            completed: { bg: "bg-gray-200", text: "text-gray-800" },
+            cancelled: { bg: "bg-red-100", text: "text-red-800" },
+            cancelled_no_show: { bg: "bg-red-200", text: "text-red-900" },
+        };
+        const badge = badges[status] || badges.pending_payment;
+        return (
+            <span
+                className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${badge.bg} ${badge.text}`}
+            >
+                {translateStatus(status)}
+            </span>
+        );
+    };
+
+    const translatePaymentMethod = (method) => {
+        const map = {
+            direct: "Langsung (VA/QRIS)",
+            balance: "Saldo",
+            paylater: "Paylater",
+            cash: "Tunai",
+        };
+        return map[method] || method;
     };
 
     const handleCheckIn = () => {
-        if (confirm("Confirm member check-in?")) {
-            router.post(route("admin.transactions.check-in", transaction.id));
+        if (confirm("Konfirmasi check-in anggota?")) {
+            router.post(route("admin.transactions.check-in", transaction.id), {
+                preserveScroll: true,
+            });
         }
     };
 
     const handleComplete = () => {
-        if (confirm("Mark this transaction as completed?")) {
-            router.post(route("admin.transactions.complete", transaction.id));
+        if (confirm("Tandai transaksi ini sebagai selesai?")) {
+            router.post(route("admin.transactions.complete", transaction.id), {
+                preserveScroll: true,
+            });
         }
     };
 
     const handleValidatePayment = () => {
-        if (confirm("Validate this payment manually?")) {
+        if (confirm("Validasi pembayaran ini secara manual?")) {
             router.post(
-                route("admin.transactions.validate-payment", transaction.id)
+                route("admin.transactions.validate-payment", transaction.id),
+                {
+                    preserveScroll: true,
+                }
             );
         }
     };
 
-    return (
-        <AuthenticatedLayout header={`Transaction #${transaction.id}`}>
-            <Head title={`Transaction #${transaction.id}`} />
+    const canCheckIn =
+        transaction.status === "grace_period_active" ||
+        transaction.status === "confirmed";
 
-            <div className="max-w-4xl space-y-6">
+    const canComplete =
+        transaction.status === "checked_in" ||
+        transaction.status === "in_progress";
+
+    const canValidatePayment =
+        transaction.payment?.payment_status === "waiting" || // Cek status payment
+        transaction.status === "pending_payment"; // Cek status transaksi
+
+    return (
+        <AuthenticatedLayout header={`Detail Transaksi #${transaction.id}`}>
+            <Head title={`Transaksi #${transaction.id}`} />
+
+            <div className="max-w-7xl mx-auto space-y-6">
                 <Link
                     href={route("admin.transactions.index")}
-                    className="inline-flex items-center gap-2 text-[#0066CC] hover:text-[#0052A3]"
+                    className="inline-flex items-center gap-2 text-[#0066CC] hover:text-[#0052A3] font-medium"
                 >
-                    <ArrowLeft className="w-4 h-4" /> Back to Transactions
+                    <ArrowLeft className="w-4 h-4" /> Kembali ke Transaksi
                 </Link>
 
-                {/* Transaction Info */}
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <h3 className="text-lg font-semibold mb-4">
-                        Transaction Details
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <span className="text-gray-600">
-                                Transaction ID:
-                            </span>{" "}
-                            <span className="font-semibold">
-                                #{transaction.id}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">QR Code:</span>{" "}
-                            <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                                {transaction.qr_code}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Status:</span>{" "}
-                            <span className="font-semibold">
-                                {transaction.status.replace(/_/g, " ")}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">
-                                Payment Method:
-                            </span>{" "}
-                            <span className="font-semibold">
-                                {transaction.payment_method}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Start Time:</span>{" "}
-                            <span>
-                                {formatDateTime(transaction.start_time)}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Duration:</span>{" "}
-                            <span>{transaction.duration} minutes</span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Total Price:</span>{" "}
-                            <span className="font-bold text-[#0066CC]">
-                                {formatCurrency(transaction.total_price)}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Checked In:</span>{" "}
-                            <span>
-                                {formatDateTime(transaction.checked_in_at)}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Kolom Informasi Utama */}
+                    <div className="lg:col-span-2 bg-white rounded-lg shadow overflow-hidden">
+                        <dl className="divide-y divide-gray-200">
+                            <div className="p-6">
+                                <h3 className="text-lg font-semibold mb-4 text-gray-900">
+                                    Ringkasan Transaksi
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                                    <InfoItem
+                                        label="ID Transaksi"
+                                        value={`#${transaction.id}`}
+                                    />
+                                    <InfoItem
+                                        label="Total Harga"
+                                        className="sm:col-span-2"
+                                    >
+                                        <span className="font-bold text-2xl text-[#0066CC]">
+                                            {formatCurrency(
+                                                transaction.total_price
+                                            )}
+                                        </span>
+                                    </InfoItem>
+                                    <InfoItem
+                                        label="Metode Pembayaran"
+                                        value={translatePaymentMethod(
+                                            transaction.payment_method
+                                        )}
+                                    />
+                                    <InfoItem label="Kode QR (untuk Check-In)">
+                                        <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                                            {transaction.qr_code}
+                                        </span>
+                                    </InfoItem>
+                                    <InfoItem
+                                        label="Waktu Mulai"
+                                        value={formatDateTime(
+                                            transaction.start_time
+                                        )}
+                                    />
+                                    <InfoItem
+                                        label="Durasi"
+                                        value={`${transaction.duration} menit`}
+                                    />
+                                    <InfoItem
+                                        label="Waktu Check-In"
+                                        value={formatDateTime(
+                                            transaction.checked_in_at
+                                        )}
+                                    />
+                                    <InfoItem
+                                        label="Waktu Selesai"
+                                        value={formatDateTime(
+                                            transaction.completed_at
+                                        )}
+                                    />
+                                </div>
+                            </div>
 
-                {/* Member Info */}
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <h3 className="text-lg font-semibold mb-4">
-                        Member Information
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <span className="text-gray-600">Name:</span>{" "}
-                            <span className="font-semibold">
-                                {transaction.member.name}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Email:</span>{" "}
-                            <span>{transaction.member.email}</span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Phone:</span>{" "}
-                            <span>{transaction.member.phone}</span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Balance:</span>{" "}
-                            <span className="font-semibold">
-                                {formatCurrency(transaction.member.balance)}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+                            <div className="p-6">
+                                <h3 className="text-lg font-semibold mb-4 text-gray-900">
+                                    Informasi Anggota
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                                    <InfoItem
+                                        label="Nama"
+                                        value={transaction.member.name}
+                                    />
+                                    <InfoItem
+                                        label="Telepon"
+                                        value={transaction.member.phone}
+                                    />
+                                    <InfoItem
+                                        label="Email"
+                                        value={transaction.member.email}
+                                    />
+                                    <InfoItem
+                                        label="Saldo Saat Ini"
+                                        value={formatCurrency(
+                                            transaction.member.balance
+                                        )}
+                                    />
+                                </div>
+                            </div>
 
-                {/* Unit Info */}
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <h3 className="text-lg font-semibold mb-4">
-                        Unit Information
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <span className="text-gray-600">Unit Name:</span>{" "}
-                            <span className="font-semibold">
-                                {transaction.unit.name}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Type:</span>{" "}
-                            <span>{transaction.unit.type}</span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Hourly Rate:</span>{" "}
-                            <span className="font-semibold">
-                                {formatCurrency(transaction.unit.hourly_rate)}
-                            </span>
-                        </div>
+                            <div className="p-6">
+                                <h3 className="text-lg font-semibold mb-4 text-gray-900">
+                                    Informasi Unit
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                                    <InfoItem
+                                        label="Nama Unit"
+                                        value={transaction.unit.name}
+                                    />
+                                    <InfoItem
+                                        label="Tipe"
+                                        value={transaction.unit.type}
+                                    />
+                                    <InfoItem
+                                        label="Tarif Per Jam"
+                                        value={formatCurrency(
+                                            transaction.unit.hourly_rate
+                                        )}
+                                    />
+                                </div>
+                            </div>
+                        </dl>
                     </div>
-                </div>
 
-                {/* Actions */}
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <h3 className="text-lg font-semibold mb-4">Actions</h3>
-                    <div className="flex gap-3">
-                        {(transaction.status === "grace_period_active" ||
-                            transaction.status === "confirmed") && (
-                            <button
-                                onClick={handleCheckIn}
-                                className="px-4 py-2 bg-[#B4E4CE] text-[#0066CC] rounded-lg hover:opacity-80 font-semibold"
-                            >
-                                <CheckCircle className="w-4 h-4 inline mr-2" />{" "}
-                                Check-In Member
-                            </button>
-                        )}
-                        {transaction.status === "checked_in" && (
-                            <button
-                                onClick={handleComplete}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold"
-                            >
-                                <CheckCircle className="w-4 h-4 inline mr-2" />{" "}
-                                Complete Transaction
-                            </button>
-                        )}
-                        {transaction.payment &&
-                            transaction.payment.payment_status ===
-                                "waiting" && (
-                                <button
-                                    onClick={handleValidatePayment}
-                                    className="px-4 py-2 bg-[#0066CC] text-white rounded-lg hover:bg-[#0052A3] font-semibold"
-                                >
-                                    <CheckCircle className="w-4 h-4 inline mr-2" />{" "}
-                                    Validate Payment
-                                </button>
-                            )}
+                    {/* Kolom Status & Aksi */}
+                    <div className="lg:sticky lg:top-24 h-fit">
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <h3 className="text-lg font-semibold mb-4 text-gray-900">
+                                Status & Aksi
+                            </h3>
+
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-500 mb-2">
+                                    Status Saat Ini
+                                </label>
+                                {getStatusBadge(transaction.status)}
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                                {canValidatePayment && (
+                                    <button
+                                        onClick={handleValidatePayment}
+                                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#0066CC] to-[#0052A3] text-white rounded-lg hover:opacity-90 transition shadow font-semibold"
+                                    >
+                                        <CheckCircle className="w-4 h-4" />
+                                        Validasi Pembayaran
+                                    </button>
+                                )}
+
+                                {canCheckIn && (
+                                    <button
+                                        onClick={handleCheckIn}
+                                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#0066CC] to-[#0052A3] text-white rounded-lg hover:opacity-90 transition shadow font-semibold"
+                                    >
+                                        <CheckCircle className="w-4 h-4" />
+                                        Check-In Anggota
+                                    </button>
+                                )}
+
+                                {canComplete && (
+                                    <button
+                                        onClick={handleComplete}
+                                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition shadow font-semibold"
+                                    >
+                                        <CheckCircle className="w-4 h-4" />
+                                        Selesaikan Sesi
+                                    </button>
+                                )}
+
+                                {!canCheckIn &&
+                                    !canComplete &&
+                                    !canValidatePayment && (
+                                        <p className="text-sm text-gray-500 text-center">
+                                            Tidak ada aksi yang tersedia untuk
+                                            status ini.
+                                        </p>
+                                    )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
