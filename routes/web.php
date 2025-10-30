@@ -55,6 +55,9 @@ Route::prefix('admin')
         Route::get('members', [MemberController::class, 'index'])->name('members.index');
         Route::get('members/{member}', [MemberController::class, 'show'])->name('members.show');
         Route::patch('members/{member}/verification', [MemberController::class, 'updateVerification'])->name('members.update-verification');
+
+        Route::get('reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
+Route::get('reports/export', [App\Http\Controllers\Admin\ReportController::class, 'export'])->name('reports.export');
     });
 
 require __DIR__.'/auth.php';

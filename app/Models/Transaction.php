@@ -22,6 +22,7 @@ class Transaction extends Model
         'checked_in_at',
         'completed_at',
         'qr_code',
+        'created_by_staff_id',
     ];
 
     protected function casts(): array
@@ -113,5 +114,9 @@ class Transaction extends Model
     public function isCancelled()
     {
         return in_array($this->status, ['cancelled', 'cancelled_no_show']);
+    }
+    public function createdByStaff()
+    {
+        return $this->belongsTo(User::class, 'created_by_staff_id');
     }
 }

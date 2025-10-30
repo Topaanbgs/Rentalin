@@ -9,6 +9,7 @@ import {
     Users,
     Menu,
     X,
+    FileText,
 } from "lucide-react";
 
 export default function AuthenticatedLayout({ header, children }) {
@@ -41,6 +42,12 @@ export default function AuthenticatedLayout({ header, children }) {
                       href: "admin.members.index",
                       icon: Users,
                       match: "admin.members.*",
+                  },
+                  {
+                      name: "Laporan Keuangan",
+                      href: "admin.reports.index",
+                      icon: FileText,
+                      match: "admin.reports.*",
                   },
               ]
             : [{ name: "Dasbor", href: "dashboard", icon: LayoutDashboard }];
