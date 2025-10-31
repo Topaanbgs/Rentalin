@@ -12,10 +12,14 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $today = now()->startOfDay();
         $thisMonth = now()->startOfMonth();
+
+        $activeBookingsPage = $request->get('activeBookingsPage', 1);
+        $recentTransactionsPage = $request->get('recentTransactionsPage', 1);
+        $perPage = 5;
 
         $stats = [
             'total_units' => RentalUnit::count(),
@@ -34,8 +38,8 @@ class DashboardController extends Controller
         $activeBookings = Transaction::with(['user', 'rentalUnit'])
             ->whereIn('status', ['grace_period_active', 'checked_in', 'in_progress'])
             ->orderBy('start_time', 'desc')
-            ->get()
-            ->map(function ($transaction) {
+            ->paginate($perPage, ['*'], 'activeBookingsPage', $activeBookingsPage)
+            ->through(function ($transaction) {
                 return [
                     'id' => $transaction->id,
                     'qr_code' => $transaction->qr_code,
@@ -44,17 +48,13 @@ class DashboardController extends Controller
                     'unit_name' => $transaction->rentalUnit->name,
                     'status' => $transaction->status,
                     'start_time' => $transaction->start_time,
-                    'duration' => $transaction->duration,
-                    'grace_period_expires_at' => $transaction->grace_period_expires_at,
-                    'checked_in_at' => $transaction->checked_in_at,
                 ];
             });
 
         $recentTransactions = Transaction::with(['user', 'rentalUnit', 'payment'])
             ->orderBy('created_at', 'desc')
-            ->take(10)
-            ->get()
-            ->map(function ($transaction) {
+            ->paginate($perPage, ['*'], 'recentTransactionsPage', $recentTransactionsPage)
+            ->through(function ($transaction) {
                 return [
                     'id' => $transaction->id,
                     'member_name' => $transaction->user->name,

@@ -110,7 +110,7 @@ class MemberController extends Controller
 
         $member->update(['is_verified' => $validated['is_verified']]);
 
-        // Activate/block paylater based on verification
+        // Status paylater based on verification
         if ($member->paylaterAccount) {
             $member->paylaterAccount->update([
                 'status' => $validated['is_verified'] ? 'active' : 'blocked'

@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import {
     DollarSign,
     Users,
@@ -14,10 +14,7 @@ export default function Dashboard({
     recentTransactions,
 }) {
     const formatCurrency = (amount) => {
-        // Handle null or undefined amount gracefully
-        if (amount === null || typeof amount === "undefined") {
-            amount = 0;
-        }
+        if (amount === null || typeof amount === "undefined") amount = 0;
         return new Intl.NumberFormat("id-ID", {
             style: "currency",
             currency: "IDR",
@@ -26,7 +23,7 @@ export default function Dashboard({
     };
 
     const formatDateTime = (date) => {
-        if (!date) return "-"; // Return dash if date is null/undefined
+        if (!date) return "-";
         try {
             return new Date(date).toLocaleString("id-ID", {
                 day: "2-digit",
@@ -34,11 +31,10 @@ export default function Dashboard({
                 year: "numeric",
                 hour: "2-digit",
                 minute: "2-digit",
-                timeZone: "Asia/Makassar", // WITA Timezone
+                timeZone: "Asia/Makassar",
             });
-        } catch (e) {
-            console.error("Failed to format date:", date, e);
-            return "Invalid Date"; // Return error indicator
+        } catch {
+            return "Invalid Date";
         }
     };
 
@@ -55,7 +51,6 @@ export default function Dashboard({
             expired: "Kedaluwarsa",
             refunded: "Dikembalikan",
         };
-        // Handle null or undefined status
         return (
             map[status] ||
             (status ? status.replace(/_/g, " ") : "Tidak Diketahui")
@@ -72,78 +67,38 @@ export default function Dashboard({
             paid: "bg-green-100 text-green-800 border border-green-300",
             cancelled: "bg-red-100 text-red-800 border border-red-300",
             failed: "bg-red-100 text-red-800 border border-red-300",
-            expired: "bg-gray-200 text-gray-800 border border-gray-400", // Adjusted gray
+            expired: "bg-gray-200 text-gray-800 border border-gray-400",
             refunded: "bg-purple-100 text-purple-800 border border-purple-300",
             pending: "bg-orange-100 text-orange-800 border border-orange-300",
         };
-        // Handle null or undefined status
         return (
             badges[status] || "bg-gray-100 text-gray-800 border border-gray-300"
         );
     };
 
-    // Komponen Stat Card - Ganti route() dengan '#'
-    const StatCard = ({
-        icon: Icon,
-        title,
-        value,
-        link,
-        colorClass,
-        gradientClass,
-    }) => (
+    const StatCard = ({ icon: Icon, title, value, link }) => (
         <Link
             href={link || "#"}
-            className={`block p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 ${
-                gradientClass ? gradientClass : colorClass
-            }`}
+            className="block p-6 rounded-xl shadow-lg bg-white hover:shadow-xl transition"
         >
             <div className="flex justify-between items-start mb-2">
-                <div
-                    className={`p-3 rounded-full ${
-                        gradientClass ? "bg-white/20" : "bg-gray-100"
-                    }`}
-                >
-                    <Icon
-                        className={`w-6 h-6 ${
-                            gradientClass ? "text-white" : "text-gray-700"
-                        }`}
-                    />
+                <div className="p-3 rounded-full bg-gray-100">
+                    <Icon className="w-6 h-6 text-gray-700" />
                 </div>
             </div>
-            <div
-                className={`text-sm ${
-                    gradientClass ? "text-white/90" : "text-gray-600"
-                } mb-1`}
-            >
-                {title}
-            </div>
-            <div
-                className={`text-3xl font-bold ${
-                    gradientClass ? "text-white" : "text-gray-900"
-                } mb-2`}
-            >
-                {value}
-            </div>
-            <div
-                className={`text-xs ${
-                    gradientClass ? "text-white/80" : "text-gray-500"
-                } flex items-center group`}
-            >
+            <div className="text-sm text-gray-600 mb-1">{title}</div>
+            <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
+            <div className="text-xs text-gray-500 flex items-center group">
                 Lihat Detail{" "}
-                <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-3 h-3 ml-1 text-[#0066CC] group-hover:translate-x-1 transition-transform" />
             </div>
         </Link>
     );
 
-    // Safely access stats, providing defaults if undefined
-    const safeStats = {
-        today_revenue: stats?.today_revenue ?? 0,
-        month_revenue: stats?.month_revenue ?? 0,
-        active_bookings: stats?.active_bookings ?? 0,
-        total_members: stats?.total_members ?? 0,
+    const changePage = (table, url) => {
+        if (!url) return;
+        router.get(url, {}, { preserveScroll: true, preserveState: true });
     };
-    const safeActiveBookings = activeBookings || [];
-    const safeRecentTransactions = recentTransactions || [];
 
     return (
         <AuthenticatedLayout
@@ -154,48 +109,36 @@ export default function Dashboard({
             }
         >
             <Head title="Dashboard Admin" />
-
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-8">
-                    {/* Stats Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <StatCard
                             icon={DollarSign}
                             title="Pendapatan Hari Ini"
-                            value={formatCurrency(safeStats.today_revenue)}
-                            colorClass="bg-white"
-                            // link={route('admin.transactions.index')} // Ganti dengan '#' atau route yang valid
+                            value={formatCurrency(stats.today_revenue)}
                             link="#"
                         />
                         <StatCard
                             icon={Calendar}
                             title="Pendapatan Bulan Ini"
-                            value={formatCurrency(safeStats.month_revenue)}
-                            colorClass="bg-white"
-                            // link={route('admin.transactions.index')} // Ganti dengan '#' atau route yang valid
+                            value={formatCurrency(stats.month_revenue)}
                             link="#"
                         />
                         <StatCard
                             icon={ListChecks}
                             title="Sesi Aktif"
-                            value={safeStats.active_bookings}
-                            colorClass="bg-white"
-                            // link={route('admin.bookings.index')} // Ganti dengan '#' atau route yang valid
+                            value={stats.active_bookings}
                             link="#"
                         />
                         <StatCard
                             icon={Users}
                             title="Total Anggota"
-                            value={safeStats.total_members}
-                            colorClass="bg-white"
-                            // link={route('admin.members.index')} // Ganti dengan '#' atau route yang valid
+                            value={stats.total_members}
                             link="#"
                         />
                     </div>
 
-                    {/* Tabel Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Sesi Aktif Saat Ini */}
+                    <div className="space-y-8">
                         <div className="bg-white overflow-hidden shadow-lg rounded-xl flex flex-col">
                             <div className="p-6 border-b border-gray-200">
                                 <h3 className="text-lg font-semibold text-gray-900">
@@ -224,7 +167,7 @@ export default function Dashboard({
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
-                                        {safeActiveBookings.length === 0 ? (
+                                        {activeBookings.data.length === 0 ? (
                                             <tr>
                                                 <td
                                                     colSpan="5"
@@ -234,7 +177,7 @@ export default function Dashboard({
                                                 </td>
                                             </tr>
                                         ) : (
-                                            safeActiveBookings.map(
+                                            activeBookings.data.map(
                                                 (booking) => (
                                                     <tr
                                                         key={booking.id}
@@ -242,17 +185,18 @@ export default function Dashboard({
                                                     >
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="text-sm font-medium text-gray-900">
-                                                                {booking.member_name ||
-                                                                    "-"}
+                                                                {
+                                                                    booking.member_name
+                                                                }
                                                             </div>
                                                             <div className="text-xs text-gray-500">
-                                                                {booking.member_phone ||
-                                                                    "-"}
+                                                                {
+                                                                    booking.member_phone
+                                                                }
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                                                            {booking.unit_name ||
-                                                                "-"}
+                                                            {booking.unit_name}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <span
@@ -271,22 +215,16 @@ export default function Dashboard({
                                                             )}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                            {booking.id ? (
-                                                                <Link
-                                                                    // Asumsi route ini valid
-                                                                    href={route(
-                                                                        "admin.transactions.show",
-                                                                        booking.id
-                                                                    )}
-                                                                    className="text-[#0066CC] hover:text-[#0052A3] transition-colors"
-                                                                >
-                                                                    Lihat Detail
-                                                                </Link>
-                                                            ) : (
-                                                                <span className="text-gray-400">
-                                                                    N/A
-                                                                </span>
-                                                            )}
+                                                            <Link
+                                                                href={route(
+                                                                    "admin.transactions.show",
+                                                                    booking.id
+                                                                )}
+                                                                className="text-[#0066CC] hover:text-[#0052A3] transition flex items-center gap-1"
+                                                            >
+                                                                Lihat Detail
+                                                                <ArrowRight className="w-4 h-4" />
+                                                            </Link>
                                                         </td>
                                                     </tr>
                                                 )
@@ -295,9 +233,48 @@ export default function Dashboard({
                                     </tbody>
                                 </table>
                             </div>
+                            {activeBookings.links &&
+                                activeBookings.links.length > 3 && (
+                                    <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+                                        <div className="text-sm text-gray-700">
+                                            Menampilkan {activeBookings.from}{" "}
+                                            sampai {activeBookings.to} dari{" "}
+                                            {activeBookings.total} hasil
+                                        </div>
+                                        <div className="inline-flex rounded-md shadow-sm">
+                                            {activeBookings.links.map(
+                                                (link, idx) => (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() =>
+                                                            changePage(
+                                                                "activeBookings",
+                                                                link.url
+                                                            )
+                                                        }
+                                                        disabled={!link.url}
+                                                        className={`relative inline-flex items-center px-4 py-2 text-sm font-medium border transition
+                                                    ${
+                                                        link.active
+                                                            ? "bg-gradient-to-r from-[#0066CC] to-[#0052A3] text-white border-[#0052A3]"
+                                                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                    }
+                                                    ${
+                                                        !link.url
+                                                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                                            : ""
+                                                    }`}
+                                                        dangerouslySetInnerHTML={{
+                                                            __html: link.label,
+                                                        }}
+                                                    />
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                         </div>
 
-                        {/* Transaksi Terbaru */}
                         <div className="bg-white overflow-hidden shadow-lg rounded-xl flex flex-col">
                             <div className="p-6 border-b border-gray-200">
                                 <h3 className="text-lg font-semibold text-gray-900">
@@ -323,7 +300,8 @@ export default function Dashboard({
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
-                                        {safeRecentTransactions.length === 0 ? (
+                                        {recentTransactions.data.length ===
+                                        0 ? (
                                             <tr>
                                                 <td
                                                     colSpan="4"
@@ -333,15 +311,16 @@ export default function Dashboard({
                                                 </td>
                                             </tr>
                                         ) : (
-                                            safeRecentTransactions.map(
+                                            recentTransactions.data.map(
                                                 (transaction) => (
                                                     <tr
                                                         key={transaction.id}
                                                         className="hover:bg-gray-50 transition-colors"
                                                     >
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                                                            {transaction.member_name ||
-                                                                "-"}
+                                                            {
+                                                                transaction.member_name
+                                                            }
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                             {formatCurrency(
@@ -371,6 +350,47 @@ export default function Dashboard({
                                     </tbody>
                                 </table>
                             </div>
+                            {recentTransactions.links &&
+                                recentTransactions.links.length > 3 && (
+                                    <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+                                        <div className="text-sm text-gray-700">
+                                            Menampilkan{" "}
+                                            {recentTransactions.from} sampai{" "}
+                                            {recentTransactions.to} dari{" "}
+                                            {recentTransactions.total} hasil
+                                        </div>
+                                        <div className="inline-flex rounded-md shadow-sm">
+                                            {recentTransactions.links.map(
+                                                (link, idx) => (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() =>
+                                                            changePage(
+                                                                "recentTransactions",
+                                                                link.url
+                                                            )
+                                                        }
+                                                        disabled={!link.url}
+                                                        className={`relative inline-flex items-center px-4 py-2 text-sm font-medium border transition
+                                                    ${
+                                                        link.active
+                                                            ? "bg-gradient-to-r from-[#0066CC] to-[#0052A3] text-white border-[#0052A3]"
+                                                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                    }
+                                                    ${
+                                                        !link.url
+                                                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                                            : ""
+                                                    }`}
+                                                        dangerouslySetInnerHTML={{
+                                                            __html: link.label,
+                                                        }}
+                                                    />
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                         </div>
                     </div>
                 </div>

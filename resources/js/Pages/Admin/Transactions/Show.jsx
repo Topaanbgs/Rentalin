@@ -2,7 +2,6 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router, Link } from "@inertiajs/react";
 import { ArrowLeft, CheckCircle, Clock, XCircle } from "lucide-react";
 
-// Komponen helper untuk menampilkan item info
 const InfoItem = ({ label, value, children, className = "" }) => (
     <div className={`py-3 sm:py-4 px-4 ${className}`}>
         <dt className="text-sm font-medium text-gray-500">{label}</dt>
@@ -117,8 +116,8 @@ export default function Show({ transaction }) {
         transaction.status === "in_progress";
 
     const canValidatePayment =
-        transaction.payment?.payment_status === "waiting" || // Cek status payment
-        transaction.status === "pending_payment"; // Cek status transaksi
+        transaction.payment?.payment_status === "waiting" ||
+        transaction.status === "pending_payment";
 
     return (
         <AuthenticatedLayout header={`Detail Transaksi #${transaction.id}`}>
@@ -133,125 +132,135 @@ export default function Show({ transaction }) {
                 </Link>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Kolom Informasi Utama */}
-                    <div className="lg:col-span-2 bg-white rounded-lg shadow overflow-hidden">
-                        <dl className="divide-y divide-gray-200">
-                            <div className="p-6">
-                                <h3 className="text-lg font-semibold mb-4 text-gray-900">
-                                    Ringkasan Transaksi
-                                </h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                                    <InfoItem
-                                        label="ID Transaksi"
-                                        value={`#${transaction.id}`}
-                                    />
-                                    <InfoItem
-                                        label="Total Harga"
-                                        className="sm:col-span-2"
-                                    >
-                                        <span className="font-bold text-2xl text-[#0066CC]">
-                                            {formatCurrency(
-                                                transaction.total_price
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="bg-white rounded-lg shadow overflow-hidden">
+                            <dl>
+                                <div className="p-6">
+                                    <h3 className="text-lg font-semibold mb-4 text-gray-900">
+                                        Ringkasan Transaksi
+                                    </h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
+                                        <InfoItem
+                                            label="ID Transaksi"
+                                            value={`#${transaction.id}`}
+                                        />
+                                        <InfoItem
+                                            label="Metode Pembayaran"
+                                            value={translatePaymentMethod(
+                                                transaction.payment_method
                                             )}
-                                        </span>
-                                    </InfoItem>
-                                    <InfoItem
-                                        label="Metode Pembayaran"
-                                        value={translatePaymentMethod(
-                                            transaction.payment_method
-                                        )}
-                                    />
-                                    <InfoItem label="Kode QR (untuk Check-In)">
-                                        <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                                            {transaction.qr_code}
-                                        </span>
-                                    </InfoItem>
-                                    <InfoItem
-                                        label="Waktu Mulai"
-                                        value={formatDateTime(
-                                            transaction.start_time
-                                        )}
-                                    />
-                                    <InfoItem
-                                        label="Durasi"
-                                        value={`${transaction.duration} menit`}
-                                    />
-                                    <InfoItem
-                                        label="Waktu Check-In"
-                                        value={formatDateTime(
-                                            transaction.checked_in_at
-                                        )}
-                                    />
-                                    <InfoItem
-                                        label="Waktu Selesai"
-                                        value={formatDateTime(
-                                            transaction.completed_at
-                                        )}
-                                    />
+                                        />
+                                        <InfoItem label="Kode QR (untuk Check-In)">
+                                            <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                                                {transaction.qr_code}
+                                            </span>
+                                        </InfoItem>
+
+                                        <InfoItem
+                                            label="Total Harga"
+                                            className="sm:col-span-2"
+                                        >
+                                            <span className="font-bold text-2xl text-[#0066CC]">
+                                                {formatCurrency(
+                                                    transaction.total_price
+                                                )}
+                                            </span>
+                                        </InfoItem>
+
+                                        <InfoItem
+                                            label="Durasi"
+                                            value={`${transaction.duration} menit`}
+                                        />
+                                        <InfoItem
+                                            label="Waktu Check-In"
+                                            value={formatDateTime(
+                                                transaction.checked_in_at
+                                            )}
+                                        />
+                                        <InfoItem
+                                            label="Waktu Mulai"
+                                            value={formatDateTime(
+                                                transaction.start_time
+                                            )}
+                                        />
+                                        <InfoItem
+                                            label="Waktu Selesai"
+                                            value={formatDateTime(
+                                                transaction.completed_at
+                                            )}
+                                        />
+                                    </div>
                                 </div>
+                            </dl>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="bg-white rounded-lg shadow overflow-hidden">
+                                <dl>
+                                    <div className="p-6">
+                                        <h3 className="text-lg font-semibold mb-4 text-gray-900">
+                                            Informasi Anggota
+                                        </h3>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                                            <InfoItem
+                                                label="Nama"
+                                                value={transaction.member.name}
+                                            />
+                                            <InfoItem
+                                                label="Saldo Saat Ini"
+                                                value={formatCurrency(
+                                                    transaction.member.balance
+                                                )}
+                                            />
+                                            <InfoItem
+                                                label="Email"
+                                                value={transaction.member.email}
+                                            />
+                                            <InfoItem
+                                                label="Telepon"
+                                                value={transaction.member.phone}
+                                            />
+                                        </div>
+                                    </div>
+                                </dl>
                             </div>
 
-                            <div className="p-6">
-                                <h3 className="text-lg font-semibold mb-4 text-gray-900">
-                                    Informasi Anggota
-                                </h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                                    <InfoItem
-                                        label="Nama"
-                                        value={transaction.member.name}
-                                    />
-                                    <InfoItem
-                                        label="Telepon"
-                                        value={transaction.member.phone}
-                                    />
-                                    <InfoItem
-                                        label="Email"
-                                        value={transaction.member.email}
-                                    />
-                                    <InfoItem
-                                        label="Saldo Saat Ini"
-                                        value={formatCurrency(
-                                            transaction.member.balance
-                                        )}
-                                    />
-                                </div>
+                            <div className="bg-white rounded-lg shadow overflow-hidden">
+                                <dl>
+                                    <div className="p-6">
+                                        <h3 className="text-lg font-semibold mb-4 text-gray-900">
+                                            Informasi Unit
+                                        </h3>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                                            <InfoItem
+                                                label="Nama Unit"
+                                                value={transaction.unit.name}
+                                            />
+                                            <InfoItem
+                                                label="Tipe"
+                                                value={transaction.unit.type}
+                                            />
+                                            <InfoItem
+                                                label="Tarif Per Jam"
+                                                value={formatCurrency(
+                                                    transaction.unit.hourly_rate
+                                                )}
+                                                className="sm:col-span-2"
+                                            />
+                                        </div>
+                                    </div>
+                                </dl>
                             </div>
-
-                            <div className="p-6">
-                                <h3 className="text-lg font-semibold mb-4 text-gray-900">
-                                    Informasi Unit
-                                </h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                                    <InfoItem
-                                        label="Nama Unit"
-                                        value={transaction.unit.name}
-                                    />
-                                    <InfoItem
-                                        label="Tipe"
-                                        value={transaction.unit.type}
-                                    />
-                                    <InfoItem
-                                        label="Tarif Per Jam"
-                                        value={formatCurrency(
-                                            transaction.unit.hourly_rate
-                                        )}
-                                    />
-                                </div>
-                            </div>
-                        </dl>
+                        </div>
                     </div>
 
-                    {/* Kolom Status & Aksi */}
-                    <div className="lg:sticky lg:top-24 h-fit">
+                    <div className="lg:sticky lg:top-24 h-fit lg:col-span-1">
                         <div className="bg-white rounded-lg shadow p-6">
                             <h3 className="text-lg font-semibold mb-4 text-gray-900">
-                                Status & Aksi
+                                Status Transaksi
                             </h3>
 
                             <div className="mb-6">
-                                <label className="block text-sm font-medium text-gray-500 mb-2">
-                                    Status Saat Ini
-                                </label>
                                 {getStatusBadge(transaction.status)}
                             </div>
 
