@@ -22,10 +22,10 @@ export default function Login({ status, canResetPassword }) {
             <Head title="Masuk - Rentalin" />
             {/* Left Section */}
             <div className="min-h-screen flex flex-col lg:flex-row">
-                <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 bg-white">
+                <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 bg-black/80">
                     <div className="w-full max-w-md">
                         <div className="text-center mb-10">
-                            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                            <h2 className="text-3xl font-bold text-white mb-2">
                                 Masuk
                             </h2>
                         </div>
@@ -38,7 +38,7 @@ export default function Login({ status, canResetPassword }) {
 
                         <form onSubmit={submit} className="space-y-6">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label className="block text-sm font-semibold text-white mb-2">
                                     Alamat Email
                                 </label>
                                 <div className="relative">
@@ -63,7 +63,7 @@ export default function Login({ status, canResetPassword }) {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label className="block text-sm font-semibold text-white mb-2">
                                     Kata Sandi
                                 </label>
                                 <div className="relative">
@@ -99,14 +99,14 @@ export default function Login({ status, canResetPassword }) {
                                         }
                                         className="w-4 h-4 text-[#0066CC] border-gray-300 rounded focus:ring-[#0066CC] cursor-pointer"
                                     />
-                                    <span className="ml-2 text-sm text-gray-700">
+                                    <span className="ml-2 text-sm text-white">
                                         Ingat saya
                                     </span>
                                 </label>
                                 {canResetPassword && (
                                     <Link
                                         href={route("password.request")}
-                                        className="text-sm font-semibold text-[#0066CC] hover:text-[#0052A3] transition"
+                                        className="text-sm font-semibold text-white hover:text-[#0066CC] transition"
                                     >
                                         Lupa kata sandi?
                                     </Link>
@@ -129,7 +129,7 @@ export default function Login({ status, canResetPassword }) {
 
                 {/* Right Section */}
                 <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center text-white text-center p-12">
-                    <div className="absolute inset-0 bg-black/70 z-10" />
+                    <div className="absolute inset-0 bg-black/50 z-10" />
 
                     <div className="relative z-20">
                         <h1 className="text-4xl font-bold mb-4">

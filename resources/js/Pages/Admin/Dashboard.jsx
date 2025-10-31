@@ -45,8 +45,8 @@ export default function Dashboard({
             </div>
             <div className="text-sm text-gray-600 mb-1">{title}</div>
             <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
-            <div className="text-xs text-gray-500 flex items-center group">
-                Lihat Detail{" "}
+            <div className="text-xs text-[#0066CC] flex items-center group">
+                Lihat Detail
                 <ArrowRight className="w-3 h-3 ml-1 text-[#0066CC] group-hover:translate-x-1 transition-transform" />
             </div>
         </Link>
@@ -165,7 +165,7 @@ export default function Dashboard({
                                                             )}
                                                             className="text-[#0066CC] hover:text-[#0052A3] flex items-center gap-1"
                                                         >
-                                                            Lihat Detail{" "}
+                                                            Lihat Detail
                                                             <ArrowRight className="w-4 h-4" />
                                                         </Link>
                                                     </td>
