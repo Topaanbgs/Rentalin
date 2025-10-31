@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router, Link } from "@inertiajs/react";
 import { useState } from "react";
+import { StatusBadge, translateStatus } from "@/Utils/statusTranslator";
 import {
     Download,
     Calendar,
@@ -13,14 +14,14 @@ import {
     ArrowRight,
     CreditCard,
     Wallet,
-    CalendarClock, // Icon for Paylater
-    Gamepad2, // Icon for Unit Type
+    CalendarClock,
+    Gamepad2,
 } from "lucide-react";
 
 export default function Index({
     stats,
     payment_breakdown,
-    revenue_per_unit_type, // Changed from revenue_per_unit
+    revenue_per_unit_type,
     recent_transactions,
     filters,
     staff_name,
@@ -49,43 +50,6 @@ export default function Index({
             minute: "2-digit",
             timeZone: "Asia/Makassar",
         });
-    };
-
-    const translateStatus = (status) => {
-        const map = {
-            pending_payment: "Menunggu Pembayaran",
-            confirmed: "Terkonfirmasi",
-            grace_period_active: "Masa Tenggang",
-            checked_in: "Sudah Masuk",
-            in_progress: "Sedang Berlangsung",
-            completed: "Selesai",
-            cancelled: "Dibatalkan",
-            cancelled_no_show: "Batal (Tidak Hadir)",
-            paid: "Dibayar", // For transaction status in table
-        };
-        return map[status] || status.replace(/_/g, " ");
-    };
-
-    const getStatusBadge = (status) => {
-        const badges = {
-            completed: { bg: "bg-green-100", text: "text-green-800" },
-            paid: { bg: "bg-green-100", text: "text-green-800" },
-            cancelled: { bg: "bg-red-100", text: "text-red-800" },
-            cancelled_no_show: { bg: "bg-red-200", text: "text-red-900" },
-            pending_payment: { bg: "bg-yellow-100", text: "text-yellow-800" },
-            // Add other relevant statuses if needed
-        };
-        const badge = badges[status] || {
-            bg: "bg-gray-100",
-            text: "text-gray-800",
-        }; // Default gray
-        return (
-            <span
-                className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${badge.bg} ${badge.text}`}
-            >
-                {translateStatus(status)}
-            </span>
-        );
     };
 
     const translatePaymentMethod = (method) => {
@@ -118,7 +82,7 @@ export default function Index({
     };
 
     const handleExport = () => {
-        // Build query string manually
+        // Manually build query string for export
         const params = new URLSearchParams();
         if (dateFrom) params.append("date_from", dateFrom);
         if (dateTo) params.append("date_to", dateTo);
@@ -134,14 +98,14 @@ export default function Index({
         total_revenue: stats?.total_revenue ?? 0,
         total_transactions: stats?.total_transactions ?? 0,
         completed_transactions: stats?.completed_transactions ?? 0,
-        average_transaction_value: stats?.average_transaction_value ?? 0, // Added stat
+        average_transaction_value: stats?.average_transaction_value ?? 0,
         outstanding_paylater: stats?.outstanding_paylater ?? 0,
     };
     const safePaymentBreakdown = {
         direct: payment_breakdown?.direct ?? 0,
         balance: payment_breakdown?.balance ?? 0,
         paylater: payment_breakdown?.paylater ?? 0,
-        cash: payment_breakdown?.cash ?? 0, // Added Cash possibility
+        cash: payment_breakdown?.cash ?? 0,
     };
     const safeRevenuePerUnitType = revenue_per_unit_type || [];
     const safeRecentTransactions = recent_transactions || [];
@@ -406,7 +370,7 @@ export default function Index({
                                         ID
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Anggota
+                                        Members
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Unit
@@ -475,7 +439,9 @@ export default function Index({
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                {getStatusBadge(t.status)}
+                                                <StatusBadge
+                                                    status={t.status}
+                                                />
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                 {formatDateTime(t.created_at)}

@@ -21,7 +21,7 @@ class Transaction extends Model
         'grace_period_expires_at',
         'checked_in_at',
         'completed_at',
-        'qr_code',
+        'booking_code',
         'created_by_staff_id',
     ];
 
@@ -36,87 +36,33 @@ class Transaction extends Model
         ];
     }
 
-    // Boot method for auto-generating QR code
     protected static function boot()
     {
         parent::boot();
-
         static::creating(function ($transaction) {
-            if (empty($transaction->qr_code)) {
-                $transaction->qr_code = 'BOOKING-' . strtoupper(Str::random(8));
+            if (empty($transaction->booking_code)) {
+                $transaction->booking_code = 'BOOKING-' . strtoupper(Str::random(8));
             }
         });
     }
 
     // Relationships
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function rentalUnit()
-    {
-        return $this->belongsTo(RentalUnit::class);
-    }
-
-    public function payment()
-    {
-        return $this->hasOne(Payment::class);
-    }
-
-    public function paylaterTransaction()
-    {
-        return $this->hasOne(PaylaterTransaction::class);
-    }
+    public function user() { return $this->belongsTo(User::class); }
+    public function rentalUnit() { return $this->belongsTo(RentalUnit::class); }
+    public function payment() { return $this->hasOne(Payment::class); }
+    public function paylaterTransaction() { return $this->hasOne(PaylaterTransaction::class); }
+    public function createdByStaff() { return $this->belongsTo(User::class, 'created_by_staff_id'); }
 
     // Scopes
-    public function scopeActive($query)
-    {
-        return $query->whereIn('status', ['grace_period_active', 'checked_in', 'in_progress']);
-    }
+    public function scopeActive($query) { return $query->whereIn('status', ['grace_period_active', 'checked_in']); }
+    public function scopePending($query) { return $query->where('status', 'pending_payment'); }
+    public function scopeCompleted($query) { return $query->where('status', 'completed'); }
 
-    public function scopePending($query)
-    {
-        return $query->where('status', 'pending_payment');
-    }
-
-    public function scopeCompleted($query)
-    {
-        return $query->where('status', 'completed');
-    }
-
-    // Status check methods
-    public function isPending()
-    {
-        return $this->status === 'pending_payment';
-    }
-
-    public function isConfirmed()
-    {
-        return $this->status === 'confirmed';
-    }
-
-    public function isGracePeriodActive()
-    {
-        return $this->status === 'grace_period_active';
-    }
-
-    public function isCheckedIn()
-    {
-        return in_array($this->status, ['checked_in', 'in_progress']);
-    }
-
-    public function isCompleted()
-    {
-        return $this->status === 'completed';
-    }
-
-    public function isCancelled()
-    {
-        return in_array($this->status, ['cancelled', 'cancelled_no_show']);
-    }
-    public function createdByStaff()
-    {
-        return $this->belongsTo(User::class, 'created_by_staff_id');
-    }
+    // Status Checkers
+    public function isPending() { return $this->status === 'pending_payment'; }
+    public function isGracePeriodActive() { return $this->status === 'grace_period_active'; }
+    public function isCheckedIn() { return $this->status === 'checked_in'; }
+    public function isCompleted() { return $this->status === 'completed'; }
+    public function isCancelled() { return $this->status === 'cancelled'; }
+    public function isCancelledExpired() { return $this->status === 'cancelled_expired'; }
 }

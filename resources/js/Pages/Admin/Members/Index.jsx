@@ -55,8 +55,8 @@ export default function Index({ members, filters }) {
             };
         if (score >= 100)
             return {
-                bg: "bg-blue-100", // Konsisten
-                text: "text-blue-800", // Konsisten
+                bg: "bg-blue-100",
+                text: "text-blue-800",
                 label: "Baik",
             };
         if (score >= 80)
@@ -69,8 +69,8 @@ export default function Index({ members, filters }) {
     };
 
     return (
-        <AuthenticatedLayout header="Manajemen Anggota">
-            <Head title="Anggota" />
+        <AuthenticatedLayout header="Manajemen Members">
+            <Head title="Members" />
 
             <div className="space-y-6">
                 {/* Search & Filter */}
@@ -78,7 +78,7 @@ export default function Index({ members, filters }) {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Cari Anggota
+                                Cari Data Members
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -104,7 +104,7 @@ export default function Index({ members, filters }) {
                                 onChange={(e) => setVerified(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-offset-1 focus:ring-[#0066CC]"
                             >
-                                <option value="all">Semua Anggota</option>
+                                <option value="all">Semua Members</option>
                                 <option value="true">Terverifikasi</option>
                                 <option value="false">Belum Verifikasi</option>
                             </select>
@@ -136,7 +136,7 @@ export default function Index({ members, filters }) {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Anggota
+                                        Members
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Kontak
@@ -148,7 +148,7 @@ export default function Index({ members, filters }) {
                                         Paylater
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Skor Kepercayaan
+                                        Skor
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Status
@@ -165,7 +165,7 @@ export default function Index({ members, filters }) {
                                             colSpan="7"
                                             className="px-6 py-12 text-center text-gray-500"
                                         >
-                                            Tidak ada anggota yang cocok dengan
+                                            Tidak ada members yang cocok dengan
                                             filter.
                                         </td>
                                     </tr>

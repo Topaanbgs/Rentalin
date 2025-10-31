@@ -6,35 +6,32 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('rental_unit_id')->constrained()->cascadeOnDelete();
-            $table->integer('duration'); // in minutes
+            $table->foreignId('created_by_staff_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->integer('duration');
             $table->decimal('total_price', 15, 2);
-            $table->enum('payment_method', ['direct', 'balance', 'paylater']);
+            $table->enum('payment_method', ['qris', 'balance', 'paylater', 'cash']);
             $table->enum('status', [
                 'pending_payment',
-                'confirmed',
                 'grace_period_active',
-                'checked_in',
-                'in_progress',
-                'completed',
-                'cancelled',
-                'cancelled_no_show'
+                'checked_in',         
+                'completed',          
+                'cancelled',          
+                'cancelled_expired'   
             ])->default('pending_payment');
-            $table->timestamp('start_time');
-            $table->timestamp('grace_period_expires_at')->nullable();
-            $table->timestamp('checked_in_at')->nullable();
-            $table->timestamp('completed_at')->nullable();
-            $table->string('qr_code')->unique()->nullable();
+
+            $table->timestamp('start_time')->nullable();              
+            $table->timestamp('grace_period_expires_at')->nullable(); 
+            $table->timestamp('checked_in_at')->nullable();           
+            $table->timestamp('completed_at')->nullable();            
+            $table->string('booking_code')->unique()->nullable();
             $table->timestamps();
-            
+
             $table->index(['user_id', 'status']);
             $table->index('start_time');
         });
