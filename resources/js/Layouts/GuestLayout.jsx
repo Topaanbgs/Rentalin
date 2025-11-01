@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "@inertiajs/react";
-import { Menu } from "lucide-react";
+import { Link, usePage } from "@inertiajs/react";
+import { useState, useEffect } from "react";
+import { Menu, X } from "lucide-react";
 
 export default function GuestLayout({ children }) {
+    const { auth } = usePage().props;
     const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
 
@@ -13,25 +14,28 @@ export default function GuestLayout({ children }) {
     }, []);
 
     const navLinks = [
-        { href: route("guest.index"), label: "Home" },
-        { href: route("guest.games"), label: "Games" },
-        { href: route("guest.consoles"), label: "Consoles" },
-        { href: route("login"), label: "Login" },
+        { href: route("guest.index"), label: "Beranda" },
+        { href: route("guest.games"), label: "Game" },
+        { href: route("guest.consoles"), label: "Konsol" },
     ];
 
     return (
         <div className="flex flex-col min-h-screen bg-black text-gray-200">
-            <nav className="fixed top-0 left-0 w-full z-50 transition-all duration-500 bg-transparent">
+            <nav
+                className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+                    scrolled
+                        ? "bg-black/90 backdrop-blur-md shadow-lg"
+                        : "bg-transparent"
+                }`}
+            >
                 <div className="container mx-auto flex items-center justify-between px-6 py-4">
                     <Link
                         href={route("guest.index")}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-3"
                     >
-                        <img
-                            src="https://res.cloudinary.com/dr2cuy2gx/image/upload/v1761821348/Rentalin_Lettermark_mitma7.png"
-                            alt="Logo"
-                            className="w-10 h-10 object-contain rounded-md drop-shadow-lg"
-                        />
+                        <span className="text-2xl font-black text-[#00D8C8]">
+                            RENTALIN
+                        </span>
                     </Link>
 
                     <div className="hidden md:flex items-center gap-8">
@@ -39,32 +43,48 @@ export default function GuestLayout({ children }) {
                             <Link
                                 key={link.href}
                                 href={link.href}
-                                className={`font-semibold tracking-wide transition ${
-                                    scrolled
-                                        ? "text-[#00D8C8] hover:text-[#00B4E6]"
-                                        : "text-white hover:text-[#00D8C8]"
-                                }`}
+                                className="font-semibold tracking-wide text-white hover:text-[#00D8C8] transition"
                             >
                                 {link.label}
                             </Link>
                         ))}
+
+                        {auth.user ? (
+                            <Link
+                                href={route("dashboard")}
+                                className="px-6 py-2 bg-gradient-to-r from-[#00D8C8] to-[#00B4E6] text-black font-bold rounded-lg hover:shadow-lg transition"
+                            >
+                                Dashboard
+                            </Link>
+                        ) : (
+                            <>
+                                <Link
+                                    href={route("login")}
+                                    className="font-semibold text-white hover:text-[#00D8C8] transition"
+                                >
+                                    Masuk
+                                </Link>
+                                <Link
+                                    href={route("register")}
+                                    className="px-6 py-2 bg-gradient-to-r from-[#00D8C8] to-[#00B4E6] text-black font-bold rounded-lg hover:shadow-lg transition"
+                                >
+                                    Daftar
+                                </Link>
+                            </>
+                        )}
                     </div>
 
                     <button
                         onClick={() => setMenuOpen(!menuOpen)}
-                        className={`md:hidden p-2 rounded-lg transition ${
-                            scrolled
-                                ? "text-[#00D8C8] bg-black/50"
-                                : "text-white bg-[#00B4E6]/30"
-                        }`}
+                        className="md:hidden p-2 rounded-lg text-white hover:text-[#00D8C8] transition"
                     >
-                        <Menu size={20} />
+                        {menuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
                 </div>
 
                 {menuOpen && (
-                    <div className="md:hidden bg-black/90 backdrop-blur-md border-t border-gray-800">
-                        <div className="flex flex-col items-center py-3 space-y-3">
+                    <div className="md:hidden bg-black/95 backdrop-blur-md border-t border-gray-800">
+                        <div className="flex flex-col items-center py-4 space-y-3">
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.href}
@@ -75,15 +95,41 @@ export default function GuestLayout({ children }) {
                                     {link.label}
                                 </Link>
                             ))}
+                            {auth.user ? (
+                                <Link
+                                    href={route("dashboard")}
+                                    onClick={() => setMenuOpen(false)}
+                                    className="px-6 py-2 bg-gradient-to-r from-[#00D8C8] to-[#00B4E6] text-black font-bold rounded-lg"
+                                >
+                                    Dashboard
+                                </Link>
+                            ) : (
+                                <>
+                                    <Link
+                                        href={route("login")}
+                                        onClick={() => setMenuOpen(false)}
+                                        className="text-white font-medium hover:text-[#00D8C8] transition"
+                                    >
+                                        Masuk
+                                    </Link>
+                                    <Link
+                                        href={route("register")}
+                                        onClick={() => setMenuOpen(false)}
+                                        className="px-6 py-2 bg-gradient-to-r from-[#00D8C8] to-[#00B4E6] text-black font-bold rounded-lg"
+                                    >
+                                        Daftar
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
             </nav>
 
-            <main className="flex-1">{children}</main>
-            
+            <main className="flex-1 pt-16">{children}</main>
+
             <footer className="bg-gray-900 text-gray-400 text-center py-6 border-t border-gray-800">
-                <p>© 2025 RENTALIN</p>
+                <p>© 2025 RENTALIN - Rental PlayStation Terpercaya</p>
             </footer>
         </div>
     );
