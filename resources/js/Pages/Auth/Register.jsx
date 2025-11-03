@@ -1,5 +1,5 @@
 import { Head, Link, useForm } from "@inertiajs/react";
-import { Lock, Mail, ArrowRight, User } from "lucide-react";
+import { Lock, Mail, ArrowRight, User, Phone } from "lucide-react";
 import InputError from "@/Components/InputError";
 import SignLayout from "@/Layouts/SignLayout";
 import { useEffect } from "react";
@@ -8,14 +8,13 @@ export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
         email: "",
+        phone_number: "",
         password: "",
         password_confirmation: "",
     });
 
     useEffect(() => {
-        return () => {
-            reset("password", "password_confirmation");
-        };
+        return () => reset("password", "password_confirmation");
     }, []);
 
     const submit = (e) => {
@@ -26,7 +25,6 @@ export default function Register() {
     return (
         <>
             <Head title="Daftar - Rentalin" />
-
             <div className="min-h-screen flex flex-col lg:flex-row">
                 <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center text-white text-center p-12">
                     <div className="absolute inset-0 bg-black/50 z-10" />
@@ -68,7 +66,7 @@ export default function Register() {
                                         onChange={(e) =>
                                             setData("name", e.target.value)
                                         }
-                                        className="w-full pl-12 pr-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:border-[#0066CC] focus:ring-4 focus:ring-[#B4E4CE]/50 transition outline-none text-gray-900"
+                                        className="w-full pl-12 pr-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:border-[#0066CC] focus:ring-4 focus:ring-[#B4E4CE]/50 outline-none text-gray-900"
                                         placeholder="Nama lengkap Anda"
                                         autoComplete="name"
                                         autoFocus
@@ -92,13 +90,39 @@ export default function Register() {
                                         onChange={(e) =>
                                             setData("email", e.target.value)
                                         }
-                                        className="w-full pl-12 pr-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:border-[#0066CC] focus:ring-4 focus:ring-[#B4E4CE]/50 transition outline-none text-gray-900"
+                                        className="w-full pl-12 pr-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:border-[#0066CC] focus:ring-4 focus:ring-[#B4E4CE]/50 outline-none text-gray-900"
                                         placeholder="email@anda.com"
                                         autoComplete="username"
                                     />
                                 </div>
                                 <InputError
                                     message={errors.email}
+                                    className="mt-2 text-red-400"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-white mb-2">
+                                    Nomor Telepon
+                                </label>
+                                <div className="relative">
+                                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                        type="tel"
+                                        value={data.phone_number}
+                                        onChange={(e) =>
+                                            setData(
+                                                "phone_number",
+                                                e.target.value
+                                            )
+                                        }
+                                        className="w-full pl-12 pr-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:border-[#0066CC] focus:ring-4 focus:ring-[#B4E4CE]/50 outline-none text-gray-900"
+                                        placeholder="08xxxxxxxxxx"
+                                        autoComplete="tel"
+                                    />
+                                </div>
+                                <InputError
+                                    message={errors.phone_number}
                                     className="mt-2 text-red-400"
                                 />
                             </div>
@@ -115,7 +139,7 @@ export default function Register() {
                                         onChange={(e) =>
                                             setData("password", e.target.value)
                                         }
-                                        className="w-full pl-12 pr-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:border-[#0066CC] focus:ring-4 focus:ring-[#B4E4CE]/50 transition outline-none text-gray-900"
+                                        className="w-full pl-12 pr-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:border-[#0066CC] focus:ring-4 focus:ring-[#B4E4CE]/50 outline-none text-gray-900"
                                         placeholder="••••••••"
                                         autoComplete="new-password"
                                     />
@@ -141,7 +165,7 @@ export default function Register() {
                                                 e.target.value
                                             )
                                         }
-                                        className="w-full pl-12 pr-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:border-[#0066CC] focus:ring-4 focus:ring-[#B4E4CE]/50 transition outline-none text-gray-900"
+                                        className="w-full pl-12 pr-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:border-[#0066CC] focus:ring-4 focus:ring-[#B4E4CE]/50 outline-none text-gray-900"
                                         placeholder="••••••••"
                                         autoComplete="new-password"
                                     />

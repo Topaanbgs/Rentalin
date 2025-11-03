@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
-use App\Models\{Transaction, User};
+use App\Models\{BalanceTransaction, Transaction, User};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB};
 use Inertia\Inertia;
@@ -15,8 +15,21 @@ class BalanceController extends Controller
         /** @var User $user */
         $user = Auth::user();
         
+        $balanceTransactions = BalanceTransaction::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(fn($t) => [
+                'id' => $t->id,
+                'type' => $t->type,
+                'amount' => $t->amount,
+                'description' => $t->description,
+                'created_at' => $t->created_at,
+            ]);
+        
         return Inertia::render('Members/Saldo', [
             'balance' => $user->balance,
+            'transactions' => $balanceTransactions,
         ]);
     }
 
@@ -36,6 +49,17 @@ class BalanceController extends Controller
             sleep(2);
 
             $user->increment('balance', $validated['amount']);
+
+            BalanceTransaction::create([
+                'user_id' => $user->id,
+                'type' => 'credit',
+                'amount' => $validated['amount'],
+                'description' => 'Top Up via QRIS',
+                'reference' => 'TOPUP-' . strtoupper(uniqid()),
+                'metadata' => [
+                    'payment_method' => $validated['payment_method'],
+                ],
+            ]);
 
             DB::commit();
 

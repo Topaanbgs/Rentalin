@@ -117,7 +117,7 @@ export default function MemberLayout({ children }) {
 
             <main className="flex-1 p-10">{children}</main>
 
-            <footer className="bg-gray-900 text-gray-400 text-center py-6 border-t border-gray-800">
+            <footer className="bg-black text-gray-200 text-center py-4 border-t border-gray-800">
                 <p>© 2025 RENTALIN - Solusi Rental PlayStation Digital</p>
             </footer>
 

@@ -41,10 +41,12 @@ export default function Saldo({ balance, transactions = [] }) {
                                             {transaction.description}
                                         </p>
                                         <p className="text-sm text-gray-500">
-                                            {new Date(transaction.created_at).toLocaleDateString('id-ID', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
+                                            {new Date(
+                                                transaction.created_at
+                                            ).toLocaleDateString("id-ID", {
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
                                             })}
                                         </p>
                                     </div>
@@ -55,20 +57,26 @@ export default function Saldo({ balance, transactions = [] }) {
                                                 : "text-fuchsia-400"
                                         }`}
                                     >
-                                        {transaction.type === "credit" ? "+" : "-"} Rp{" "}
-                                        {formatCurrency(transaction.amount)}
+                                        {transaction.type === "credit"
+                                            ? "+"
+                                            : "-"}{" "}
+                                        Rp {formatCurrency(transaction.amount)}
                                     </p>
                                 </div>
                             ))}
                         </div>
                     ) : (
                         <div className="text-center py-12">
-                            <ArrowLeftRight className="mx-auto text-gray-600 mb-3" size={48} />
+                            <ArrowLeftRight
+                                className="mx-auto text-gray-600 mb-3"
+                                size={48}
+                            />
                             <p className="text-gray-500">
                                 Belum ada riwayat transaksi saldo.
                             </p>
                             <p className="text-gray-600 text-sm mt-2">
-                                Lakukan top-up atau transaksi untuk melihat riwayat.
+                                Lakukan top-up atau transaksi untuk melihat
+                                riwayat.
                             </p>
                         </div>
                     )}

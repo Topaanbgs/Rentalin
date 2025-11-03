@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
-use App\Models\{RentalUnit, Transaction, Payment, User};
+use App\Models\{RentalUnit, Transaction, Payment, User, BalanceTransaction};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB};
 use Inertia\Inertia;
@@ -101,22 +101,8 @@ class BookingController extends Controller
         $user = Auth::user();
 
         return Inertia::render('Members/Payment', [
-            'transaction' => [
-                'id' => $transaction->id,
-                'booking_code' => $transaction->booking_code,
-                'rental_unit' => [
-                    'name' => $transaction->rentalUnit->name,
-                ],
-                'duration' => $transaction->duration,
-                'total_price' => (float) $transaction->total_price,
-            ],
-            'user' => [
-                'balance' => (float) $user->balance,
-                'paylater_account' => [
-                    'total_limit' => (float) ($user->paylaterAccount->total_limit ?? 0),
-                    'used_limit' => (float) ($user->paylaterAccount->used_limit ?? 0),
-                ],
-            ],
+            'transaction' => $transaction,
+            'user' => $user->load('paylaterAccount'),
         ]);
     }
 
@@ -150,7 +136,19 @@ class BookingController extends Controller
                         return back()->with('error', 'Saldo tidak mencukupi');
                     }
 
-                    $user->decrement('balance', (float) $transaction->total_price);
+                    $user->decrement('balance', (float)$transaction->total_price);
+                    
+                    BalanceTransaction::create([
+                        'user_id' => $user->id,
+                        'type' => 'debit',
+                        'amount' => $transaction->total_price,
+                        'description' => 'Sewa ' . $transaction->rentalUnit->name,
+                        'reference' => $transaction->booking_code,
+                        'metadata' => [
+                            'transaction_id' => $transaction->id,
+                            'unit_name' => $transaction->rentalUnit->name,
+                        ],
+                    ]);
                     
                     $transaction->payment->update([
                         'payment_status' => 'success',
@@ -176,7 +174,7 @@ class BookingController extends Controller
                         return back()->with('error', 'Limit paylater tidak mencukupi');
                     }
 
-                    $paylaterAccount->increment('used_limit', (float) $transaction->total_price);
+                    $paylaterAccount->increment('used_limit', (float)$transaction->total_price);
                     
                     $transaction->payment->update([
                         'payment_status' => 'success',
@@ -239,7 +237,7 @@ class BookingController extends Controller
                 'booking_code' => $transaction->booking_code,
                 'unit_name' => $transaction->rentalUnit->name,
                 'status' => $transaction->status,
-                'total_price' => (float) $transaction->total_price,
+                'total_price' => $transaction->total_price,
                 'start_time' => $transaction->start_time,
                 'grace_period_expires_at' => $transaction->grace_period_expires_at,
             ],
@@ -264,9 +262,21 @@ class BookingController extends Controller
 
             if ($transaction->payment->payment_status === 'success') {
                 if ($transaction->payment_method === 'balance') {
-                    $transaction->user->increment('balance', (float) $transaction->total_price);
+                    $transaction->user->increment('balance', (float)$transaction->total_price);
+                    
+                    BalanceTransaction::create([
+                        'user_id' => $transaction->user_id,
+                        'type' => 'credit',
+                        'amount' => $transaction->total_price,
+                        'description' => 'Refund ' . $transaction->rentalUnit->name,
+                        'reference' => $transaction->booking_code,
+                        'metadata' => [
+                            'transaction_id' => $transaction->id,
+                            'reason' => 'cancelled',
+                        ],
+                    ]);
                 } elseif ($transaction->payment_method === 'paylater') {
-                    $transaction->user->paylaterAccount->decrement('used_limit', (float) $transaction->total_price);
+                    $transaction->user->paylaterAccount->decrement('used_limit', (float)$transaction->total_price);
                 }
                 
                 $transaction->payment->update(['payment_status' => 'refunded']);

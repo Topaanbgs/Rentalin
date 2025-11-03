@@ -20,18 +20,18 @@ class DashboardController extends Controller
                 'id' => $u->id,
                 'name' => $u->name,
                 'type' => $u->type,
-                'hourly_rate' => (float) $u->hourly_rate,
+                'hourly_rate' => $u->hourly_rate,
                 'description' => $u->description,
                 'status' => $u->status,
             ]);
 
         $stats = [
-            'balance' => (float) $user->balance,
-            'paylater_limit' => (float) ($user->paylaterAccount->total_limit ?? 0),
-            'paylater_used' => (float) ($user->paylaterAccount->used_limit ?? 0),
-            'paylater_available' => (float) (($user->paylaterAccount->total_limit ?? 0) - ($user->paylaterAccount->used_limit ?? 0)),
-            'trust_score' => (int) ($user->paylaterAccount->trust_score ?? 100),
-            'is_verified' => (bool) $user->is_verified,
+            'balance' => $user->balance,
+            'paylater_limit' => $user->paylaterAccount->total_limit ?? 0,
+            'paylater_used' => $user->paylaterAccount->used_limit ?? 0,
+            'paylater_available' => ($user->paylaterAccount->total_limit ?? 0) - ($user->paylaterAccount->used_limit ?? 0),
+            'trust_score' => $user->paylaterAccount->trust_score ?? 100,
+            'is_verified' => $user->is_verified,
         ];
 
         $activeBookings = Transaction::where('user_id', $user->id)
