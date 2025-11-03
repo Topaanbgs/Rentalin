@@ -28,11 +28,18 @@ export default function MemberLayout({ children }) {
             <nav className="w-full bg-black/30 border-b border-gray-800 px-8 py-3 flex justify-between items-center backdrop-blur-md sticky top-0 z-50">
                 <Link
                     href={route("member.dashboard")}
-                    className="hover:opacity-90 transition-opacity"
+                    className="group flex items-center"
                 >
-                    <span className="text-2xl font-black text-[#00D8C8]">
-                        RENTALIN
-                    </span>
+                    <img
+                        src="https://res.cloudinary.com/dr2cuy2gx/image/upload/v1761821347/Rentalin_Wordmark_zmblbi.png"
+                        alt="Rentalin"
+                        className="block h-7 w-auto group-hover:hidden"
+                    />
+                    <img
+                        src="https://res.cloudinary.com/dr2cuy2gx/image/upload/v1761821348/Rentalin-Wordmark-White_nrgnwo.png"
+                        alt="Rentalin"
+                        className="hidden h-6 w-auto group-hover:block"
+                    />
                 </Link>
 
                 <div className="flex items-center gap-8 font-semibold">
@@ -111,7 +118,7 @@ export default function MemberLayout({ children }) {
             <main className="flex-1 p-10">{children}</main>
 
             <footer className="bg-gray-900 text-gray-400 text-center py-6 border-t border-gray-800">
-                <p>© 2025 RENTALIN - Rental PlayStation Terpercaya</p>
+                <p>© 2025 RENTALIN - Solusi Rental PlayStation Digital</p>
             </footer>
 
             <style>{`

@@ -19,16 +19,15 @@ return new class extends Migration
             $table->enum('status', [
                 'pending_payment',
                 'grace_period_active',
-                'checked_in',         
-                'completed',          
-                'cancelled',          
-                'cancelled_expired'   
+                'checked_in',
+                'completed',
+                'cancelled',
+                'cancelled_expired'
             ])->default('pending_payment');
-
-            $table->timestamp('start_time')->nullable();              
-            $table->timestamp('grace_period_expires_at')->nullable(); 
-            $table->timestamp('checked_in_at')->nullable();           
-            $table->timestamp('completed_at')->nullable();            
+            $table->timestamp('start_time')->nullable();
+            $table->timestamp('grace_period_expires_at')->nullable();
+            $table->timestamp('checked_in_at')->nullable();
+            $table->timestamp('completed_at')->nullable();
             $table->string('booking_code')->unique()->nullable();
             $table->timestamps();
 

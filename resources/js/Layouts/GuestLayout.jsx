@@ -31,11 +31,18 @@ export default function GuestLayout({ children }) {
                 <div className="container mx-auto flex items-center justify-between px-6 py-4">
                     <Link
                         href={route("guest.index")}
-                        className="flex items-center gap-3"
+                        className="group flex items-center"
                     >
-                        <span className="text-2xl font-black text-[#00D8C8]">
-                            RENTALIN
-                        </span>
+                        <img
+                            src="https://res.cloudinary.com/dr2cuy2gx/image/upload/v1761821347/Rentalin_Wordmark_zmblbi.png"
+                            alt="Rentalin"
+                            className="block h-7 w-auto group-hover:hidden"
+                        />
+                        <img
+                            src="https://res.cloudinary.com/dr2cuy2gx/image/upload/v1761821348/Rentalin-Wordmark-White_nrgnwo.png"
+                            alt="Rentalin"
+                            className="hidden h-6 w-auto group-hover:block"
+                        />
                     </Link>
 
                     <div className="hidden md:flex items-center gap-8">
@@ -60,15 +67,9 @@ export default function GuestLayout({ children }) {
                             <>
                                 <Link
                                     href={route("login")}
-                                    className="font-semibold text-white hover:text-[#00D8C8] transition"
-                                >
-                                    Masuk
-                                </Link>
-                                <Link
-                                    href={route("register")}
                                     className="px-6 py-2 bg-gradient-to-r from-[#00D8C8] to-[#00B4E6] text-black font-bold rounded-lg hover:shadow-lg transition"
                                 >
-                                    Daftar
+                                    Masuk
                                 </Link>
                             </>
                         )}
@@ -129,7 +130,7 @@ export default function GuestLayout({ children }) {
             <main className="flex-1 pt-16">{children}</main>
 
             <footer className="bg-gray-900 text-gray-400 text-center py-6 border-t border-gray-800">
-                <p>© 2025 RENTALIN - Rental PlayStation Terpercaya</p>
+                <p>© 2025 RENTALIN - Solusi Rental PlayStation Digital</p>
             </footer>
         </div>
     );

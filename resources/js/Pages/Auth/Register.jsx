@@ -28,9 +28,8 @@ export default function Register() {
             <Head title="Daftar - Rentalin" />
 
             <div className="min-h-screen flex flex-col lg:flex-row">
-                {/* Left Section */}
                 <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center text-white text-center p-12">
-                    <div className="absolute inset-0 bg-black/70 z-10" />
+                    <div className="absolute inset-0 bg-black/50 z-10" />
                     <div className="relative z-20">
                         <h1 className="text-4xl font-bold mb-4">
                             Selamat Datang!
@@ -48,18 +47,17 @@ export default function Register() {
                     </div>
                 </div>
 
-                {/* Right Section */}
-                <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 bg-white">
+                <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 bg-black/80">
                     <div className="w-full max-w-md">
                         <div className="text-center mb-10">
-                            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                                Daftar
+                            <h2 className="text-3xl font-bold text-white mb-2">
+                                Buat Akun
                             </h2>
                         </div>
 
                         <form onSubmit={submit} className="space-y-6">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label className="block text-sm font-semibold text-white mb-2">
                                     Nama Lengkap
                                 </label>
                                 <div className="relative">
@@ -78,12 +76,12 @@ export default function Register() {
                                 </div>
                                 <InputError
                                     message={errors.name}
-                                    className="mt-2"
+                                    className="mt-2 text-red-400"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label className="block text-sm font-semibold text-white mb-2">
                                     Alamat Email
                                 </label>
                                 <div className="relative">
@@ -101,12 +99,12 @@ export default function Register() {
                                 </div>
                                 <InputError
                                     message={errors.email}
-                                    className="mt-2"
+                                    className="mt-2 text-red-400"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label className="block text-sm font-semibold text-white mb-2">
                                     Kata Sandi
                                 </label>
                                 <div className="relative">
@@ -124,12 +122,12 @@ export default function Register() {
                                 </div>
                                 <InputError
                                     message={errors.password}
-                                    className="mt-2"
+                                    className="mt-2 text-red-400"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label className="block text-sm font-semibold text-white mb-2">
                                     Konfirmasi Kata Sandi
                                 </label>
                                 <div className="relative">
@@ -150,7 +148,7 @@ export default function Register() {
                                 </div>
                                 <InputError
                                     message={errors.password_confirmation}
-                                    className="mt-2"
+                                    className="mt-2 text-red-400"
                                 />
                             </div>
 

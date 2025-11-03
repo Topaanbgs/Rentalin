@@ -240,6 +240,9 @@ export default function AuthenticatedLayout({ header, children }) {
                         {children}
                     </div>
                 </main>
+                <footer className="bg-white text-gray-700 text-center py-2 border-t border-gray-200 px-4 shadow-sm">
+                    <p>© 2025 RENTALIN - Solusi Rental PlayStation Digital</p>
+                </footer>
             </div>
         </div>
     );

@@ -16,11 +16,10 @@ return new class extends Migration
             $table->enum('payment_status', [
                 'waiting',
                 'success',
-                'failed', 
+                'failed',
                 'expired',
                 'refunded'
             ])->default('waiting');
-
             $table->string('reference')->unique()->nullable();
             $table->json('gateway_response')->nullable();
             $table->timestamp('paid_at')->nullable();
