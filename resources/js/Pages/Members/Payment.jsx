@@ -1,6 +1,7 @@
 import { usePage, router } from "@inertiajs/react";
 import { motion } from "framer-motion";
 import { QRCodeCanvas } from "qrcode.react";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import MemberLayout from "@/Layouts/MemberLayout";
 import { formatCurrency } from "@/utils/formatCurrency";
@@ -62,7 +63,7 @@ export default function Payment({ transaction, user }) {
                             Pilih Metode Pembayaran
                         </h3>
 
-                        {!selectedMethod && (
+                        {!selectedMethod && !isProcessing && (
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -116,7 +117,7 @@ export default function Payment({ transaction, user }) {
                             </motion.div>
                         )}
 
-                        {selectedMethod && (
+                        {selectedMethod && !isProcessing && (
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -173,25 +174,36 @@ export default function Payment({ transaction, user }) {
 
                                 <button
                                     onClick={handleConfirmPayment}
-                                    disabled={isProcessing}
-                                    className={`text-black font-bold py-2 px-6 rounded-lg transition-all w-full ${
-                                        isProcessing
-                                            ? "bg-gray-500 cursor-not-allowed"
-                                            : "bg-[#00D8C8] hover:bg-[#00b4a0]"
-                                    }`}
+                                    className="bg-[#00D8C8] text-black font-bold py-2 px-6 rounded-lg hover:bg-[#00b4a0] transition-all w-full"
                                 >
-                                    {isProcessing
-                                        ? "Memproses..."
-                                        : "Konfirmasi Pembayaran"}
+                                    Konfirmasi Pembayaran
                                 </button>
 
                                 <button
                                     onClick={() => setSelectedMethod(null)}
-                                    disabled={isProcessing}
                                     className="mt-4 text-sm text-gray-400 hover:text-[#00D8C8] underline block mx-auto"
                                 >
                                     ← Ganti Metode
                                 </button>
+                            </motion.div>
+                        )}
+
+                        {isProcessing && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="flex flex-col items-center justify-center py-12"
+                            >
+                                <Loader2
+                                    className="animate-spin text-[#00D8C8] mb-4"
+                                    size={48}
+                                />
+                                <p className="text-[#00D8C8] font-semibold text-lg">
+                                    Memproses Pembayaran...
+                                </p>
+                                <p className="text-gray-400 text-sm mt-2">
+                                    Mohon tunggu sebentar
+                                </p>
                             </motion.div>
                         )}
                     </div>

@@ -48,7 +48,6 @@ export default function Index({ units, stats, activeBookings }) {
             unit_id: selectedUnit.id,
             duration: duration,
             start_time: new Date().toISOString(),
-            payment_method: "balance",
         });
     };
 

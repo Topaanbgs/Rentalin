@@ -1,5 +1,5 @@
 import { usePage, router } from "@inertiajs/react";
-import { Wallet, PlusCircle, ArrowLeftRight } from "lucide-react";
+import { Wallet, PlusCircle, ArrowLeftRight, ArrowLeft } from "lucide-react";
 import MemberLayout from "@/Layouts/MemberLayout";
 import { formatCurrency } from "@/utils/formatCurrency";
 
@@ -9,6 +9,12 @@ export default function Saldo({ balance, transactions = [] }) {
 
     return (
         <MemberLayout>
+            <button
+                onClick={() => router.visit(route("member.dashboard"))}
+                className="flex items-center gap-2 mt-8 text-[#00D8C8] hover:text-[#00b4a0] transition-all font-semibold"
+            >
+                <ArrowLeft size={20} /> Kembali ke Dashboard
+            </button>
             <div className="min-h-screen text-white px-6 py-10">
                 <div className="bg-gray-900/60 border border-cyan-400/30 rounded-2xl p-6 text-center shadow-lg mb-10">
                     <Wallet className="mx-auto text-cyan-400 mb-3" size={40} />

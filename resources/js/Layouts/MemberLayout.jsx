@@ -50,13 +50,6 @@ export default function MemberLayout({ children }) {
                         Pesanan Saya
                     </Link>
 
-                    <Link
-                        href={route("member.saldo")}
-                        className="hover:text-[#00D8C8] transition-colors"
-                    >
-                        Saldo
-                    </Link>
-
                     <div className="relative" ref={menuRef}>
                         <button
                             onClick={() => setOpenMenu(!openMenu)}

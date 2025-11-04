@@ -1,7 +1,9 @@
-import { usePage } from "@inertiajs/react";
+import { usePage, router } from "@inertiajs/react";
 import { motion } from "framer-motion";
+import { Eye } from "lucide-react";
 import MemberLayout from "@/Layouts/MemberLayout";
-import { StatusBadge, translateStatus } from "@/utils/statusTranslator";
+import { StatusBadge } from "@/utils/statusTranslator";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 export default function Order({ transactions }) {
     return (
@@ -20,12 +22,13 @@ export default function Order({ transactions }) {
                         <table className="w-full text-left border-collapse">
                             <thead className="bg-[#00D8C8]/10 text-[#00D8C8]">
                                 <tr>
-                                    <th className="py-3 px-4">ID</th>
+                                    <th className="py-3 px-4">Kode</th>
                                     <th className="py-3 px-4">Tanggal</th>
                                     <th className="py-3 px-4">Unit</th>
                                     <th className="py-3 px-4">Durasi</th>
                                     <th className="py-3 px-4">Total</th>
                                     <th className="py-3 px-4">Status</th>
+                                    <th className="py-3 px-4">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -37,7 +40,9 @@ export default function Order({ transactions }) {
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: i * 0.06 }}
                                     >
-                                        <td className="py-3 px-4">#{t.id}</td>
+                                        <td className="py-3 px-4 font-mono text-sm">
+                                            {t.booking_code}
+                                        </td>
                                         <td className="py-3 px-4">
                                             {new Date(
                                                 t.created_at
@@ -50,13 +55,26 @@ export default function Order({ transactions }) {
                                             {t.duration} menit
                                         </td>
                                         <td className="py-3 px-4 font-semibold">
-                                            Rp{" "}
-                                            {t.total_price?.toLocaleString(
-                                                "id-ID"
-                                            )}
+                                            Rp {formatCurrency(t.total_price)}
                                         </td>
                                         <td className="py-3 px-4">
                                             <StatusBadge status={t.status} />
+                                        </td>
+                                        <td className="py-3 px-4">
+                                            <button
+                                                onClick={() =>
+                                                    router.visit(
+                                                        route(
+                                                            "member.order.show",
+                                                            t.id
+                                                        )
+                                                    )
+                                                }
+                                                className="flex items-center gap-1 text-[#00D8C8] hover:text-[#00b4a0] transition"
+                                            >
+                                                <Eye size={16} />
+                                                Detail
+                                            </button>
                                         </td>
                                     </motion.tr>
                                 ))}
@@ -69,6 +87,30 @@ export default function Order({ transactions }) {
                         <p className="text-gray-500 text-center py-8">
                             Belum ada riwayat pesanan.
                         </p>
+                    )}
+
+                    {transactions?.links && transactions.data?.length > 0 && (
+                        <div className="flex justify-center gap-2 p-4 border-t border-gray-800">
+                            {transactions.links.map((link, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() =>
+                                        link.url && router.visit(link.url)
+                                    }
+                                    disabled={!link.url}
+                                    className={`px-3 py-1 rounded transition ${
+                                        link.active
+                                            ? "bg-[#00D8C8] text-black font-semibold"
+                                            : link.url
+                                            ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                                            : "bg-gray-800/50 text-gray-600 cursor-not-allowed"
+                                    }`}
+                                    dangerouslySetInnerHTML={{
+                                        __html: link.label,
+                                    }}
+                                />
+                            ))}
+                        </div>
                     )}
                 </motion.div>
             </div>

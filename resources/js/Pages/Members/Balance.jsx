@@ -33,6 +33,12 @@ export default function Balance({ balance }) {
 
     return (
         <MemberLayout>
+            <button
+                onClick={() => router.visit(route("member.dashboard"))}
+                className="flex items-center gap-2 mt-8 text-[#00D8C8] hover:text-[#00b4a0] transition-all font-semibold"
+            >
+                <ArrowLeft size={20} /> Kembali ke Dashboard
+            </button>
             <div className="min-h-screen flex flex-col items-center justify-center text-white px-4">
                 <h1 className="text-3xl font-black text-[#00D8C8] mb-10">
                     RENTALIN
@@ -132,13 +138,6 @@ export default function Balance({ balance }) {
                         </motion.div>
                     )}
                 </motion.div>
-
-                <button
-                    onClick={() => router.visit(route("member.dashboard"))}
-                    className="flex items-center gap-2 mt-8 text-[#00D8C8] hover:text-[#00b4a0] transition-all font-semibold"
-                >
-                    <ArrowLeft size={20} /> Kembali ke Dashboard
-                </button>
             </div>
         </MemberLayout>
     );

@@ -34,12 +34,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('member')->name('member.')->middleware('role:member')->group(function () {
         Route::get('/dashboard', [MemberDashboard::class, 'index'])->name('dashboard');
         
-        // Booking & Payment
+        // Booking & Orders
         Route::get('/order', [BookingController::class, 'index'])->name('order');
         Route::post('/order', [BookingController::class, 'store'])->name('order.store');
         Route::get('/order/{transaction}', [BookingController::class, 'show'])->name('order.show');
         Route::post('/order/{transaction}/cancel', [BookingController::class, 'cancel'])->name('order.cancel');
         
+        // Payment
         Route::get('/payment', [BookingController::class, 'payment'])->name('payment');
         Route::post('/payment/process', [BookingController::class, 'processPayment'])->name('payment.process');
         
@@ -52,7 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/paylater', [PaylaterController::class, 'index'])->name('paylater');
         Route::post('/paylater/{invoice}/pay', [PaylaterController::class, 'pay'])->name('paylater.pay');
         
-        // Additional Pages
+        // User Pages
         Route::get('/verification', function() {
             /** @var \App\Models\User $user */
             $user = Auth::user();

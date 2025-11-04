@@ -12,14 +12,24 @@ class BookingController extends Controller
 {
     public function index()
     {
-        $units = RentalUnit::where('status', 'available')->get();
-        
-        /** @var User $user */
-        $user = Auth::user();
-        
+        $transactions = Transaction::where('user_id', Auth::id())
+            ->with(['rentalUnit', 'payment'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15)
+            ->through(fn($t) => [
+                'id' => $t->id,
+                'booking_code' => $t->booking_code,
+                'unit_name' => $t->rentalUnit->name,
+                'duration' => $t->duration,
+                'total_price' => $t->total_price,
+                'payment_method' => $t->payment_method,
+                'status' => $t->status,
+                'created_at' => $t->created_at,
+                'start_time' => $t->start_time,
+            ]);
+
         return Inertia::render('Members/Order', [
-            'units' => $units,
-            'user' => $user->load('paylaterAccount'),
+            'transactions' => $transactions,
         ]);
     }
 
@@ -29,7 +39,6 @@ class BookingController extends Controller
             'unit_id' => 'required|exists:rental_units,id',
             'duration' => 'required|integer|min:60|max:480',
             'start_time' => 'required|date',
-            'payment_method' => 'required|in:qris,balance,paylater,cash',
         ]);
 
         $unit = RentalUnit::findOrFail($validated['unit_id']);
@@ -40,21 +49,6 @@ class BookingController extends Controller
         $hours = ceil($validated['duration'] / 60);
         $totalPrice = $unit->hourly_rate * $hours;
 
-        if ($validated['payment_method'] === 'balance' && $user->balance < $totalPrice) {
-            return back()->with('error', 'Saldo tidak mencukupi');
-        }
-
-        if ($validated['payment_method'] === 'paylater') {
-            $paylaterAccount = $user->paylaterAccount;
-            if (!$paylaterAccount) {
-                return back()->with('error', 'Akun paylater belum aktif');
-            }
-            $available = $paylaterAccount->total_limit - $paylaterAccount->used_limit;
-            if ($available < $totalPrice) {
-                return back()->with('error', 'Limit paylater tidak mencukupi');
-            }
-        }
-
         try {
             DB::beginTransaction();
 
@@ -63,7 +57,7 @@ class BookingController extends Controller
                 'rental_unit_id' => $unit->id,
                 'duration' => $validated['duration'],
                 'total_price' => $totalPrice,
-                'payment_method' => $validated['payment_method'],
+                'payment_method' => 'qris',
                 'status' => 'pending_payment',
                 'start_time' => $validated['start_time'],
                 'booking_code' => 'BK' . strtoupper(uniqid()),
@@ -72,7 +66,7 @@ class BookingController extends Controller
             Payment::create([
                 'transaction_id' => $transaction->id,
                 'amount' => $totalPrice,
-                'payment_type' => $validated['payment_method'],
+                'payment_type' => 'qris',
                 'payment_status' => 'waiting',
                 'reference' => 'REF' . strtoupper(uniqid()),
             ]);
@@ -80,7 +74,7 @@ class BookingController extends Controller
             DB::commit();
 
             return redirect()->route('member.payment', ['transaction' => $transaction->id])
-                ->with('success', 'Booking berhasil. Silakan lanjutkan pembayaran.');
+                ->with('success', 'Booking berhasil. Silakan pilih metode pembayaran.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -110,7 +104,7 @@ class BookingController extends Controller
     {
         $validated = $request->validate([
             'transaction_id' => 'required|exists:transactions,id',
-            'payment_method' => 'required|in:qris,balance,paylater,cash',
+            'payment_method' => 'required|in:qris,balance,paylater',
         ]);
 
         $transaction = Transaction::with(['payment', 'rentalUnit'])->findOrFail($validated['transaction_id']);
@@ -130,11 +124,17 @@ class BookingController extends Controller
         try {
             DB::beginTransaction();
 
+            $transaction->update(['payment_method' => $validated['payment_method']]);
+            $transaction->payment->update(['payment_type' => $validated['payment_method']]);
+
             switch ($validated['payment_method']) {
                 case 'balance':
                     if ($user->balance < $transaction->total_price) {
+                        DB::rollBack();
                         return back()->with('error', 'Saldo tidak mencukupi');
                     }
+
+                    sleep(2);
 
                     $user->decrement('balance', (float)$transaction->total_price);
                     
@@ -149,70 +149,42 @@ class BookingController extends Controller
                             'unit_name' => $transaction->rentalUnit->name,
                         ],
                     ]);
-                    
-                    $transaction->payment->update([
-                        'payment_status' => 'success',
-                        'paid_at' => now(),
-                    ]);
-
-                    $transaction->update([
-                        'status' => 'grace_period_active',
-                        'grace_period_expires_at' => now()->addMinutes(15),
-                    ]);
-
-                    $transaction->rentalUnit->update(['status' => 'booked']);
                     break;
 
                 case 'paylater':
                     $paylaterAccount = $user->paylaterAccount;
                     if (!$paylaterAccount) {
+                        DB::rollBack();
                         return back()->with('error', 'Akun paylater belum aktif');
                     }
 
                     $available = $paylaterAccount->total_limit - $paylaterAccount->used_limit;
                     if ($available < $transaction->total_price) {
+                        DB::rollBack();
                         return back()->with('error', 'Limit paylater tidak mencukupi');
                     }
 
+                    sleep(2);
+
                     $paylaterAccount->increment('used_limit', (float)$transaction->total_price);
-                    
-                    $transaction->payment->update([
-                        'payment_status' => 'success',
-                        'paid_at' => now(),
-                    ]);
-
-                    $transaction->update([
-                        'status' => 'grace_period_active',
-                        'grace_period_expires_at' => now()->addMinutes(15),
-                    ]);
-
-                    $transaction->rentalUnit->update(['status' => 'booked']);
                     break;
 
                 case 'qris':
-                    $transaction->payment->update([
-                        'payment_status' => 'success',
-                        'paid_at' => now(),
-                    ]);
-
-                    $transaction->update([
-                        'status' => 'grace_period_active',
-                        'grace_period_expires_at' => now()->addMinutes(15),
-                    ]);
-
-                    $transaction->rentalUnit->update(['status' => 'booked']);
-                    break;
-
-                case 'cash':
-                    $transaction->payment->update([
-                        'payment_status' => 'waiting',
-                    ]);
-
-                    $transaction->update([
-                        'status' => 'pending_payment',
-                    ]);
+                    sleep(2);
                     break;
             }
+
+            $transaction->payment->update([
+                'payment_status' => 'success',
+                'paid_at' => now(),
+            ]);
+
+            $transaction->update([
+                'status' => 'grace_period_active',
+                'grace_period_expires_at' => now()->addMinutes(15),
+            ]);
+
+            $transaction->rentalUnit->update(['status' => 'booked']);
 
             DB::commit();
 
@@ -231,15 +203,18 @@ class BookingController extends Controller
             abort(403);
         }
 
-        return Inertia::render('Members/Order', [
+        return Inertia::render('Members/OrderDetail', [
             'transaction' => [
                 'id' => $transaction->id,
                 'booking_code' => $transaction->booking_code,
                 'unit_name' => $transaction->rentalUnit->name,
                 'status' => $transaction->status,
                 'total_price' => $transaction->total_price,
+                'duration' => $transaction->duration,
+                'payment_method' => $transaction->payment_method,
                 'start_time' => $transaction->start_time,
                 'grace_period_expires_at' => $transaction->grace_period_expires_at,
+                'created_at' => $transaction->created_at,
             ],
         ]);
     }
@@ -284,7 +259,7 @@ class BookingController extends Controller
 
             DB::commit();
 
-            return redirect()->route('member.dashboard')
+            return redirect()->route('member.order')
                 ->with('success', 'Booking berhasil dibatalkan');
 
         } catch (\Exception $e) {

@@ -107,8 +107,8 @@ class TransactionController extends Controller
 
     public function checkIn(Transaction $transaction)
     {
-        if (!$transaction->isGracePeriodActive()) {
-            return back()->with('error', 'Transaction not eligible for check-in.');
+        if ($transaction->status !== 'grace_period_active') {
+            return back()->with('error', 'Transaction not eligible for check-in');
         }
 
         DB::transaction(function () use ($transaction) {
@@ -119,13 +119,13 @@ class TransactionController extends Controller
             $transaction->rentalUnit->update(['status' => 'in_use']);
         });
 
-        return back()->with('success', 'Member checked in successfully.');
+        return back()->with('success', 'Member checked in successfully');
     }
 
     public function complete(Transaction $transaction)
     {
-        if (!$transaction->isCheckedIn()) {
-            return back()->with('error', 'Transaction not checked in.');
+        if ($transaction->status !== 'checked_in') {
+            return back()->with('error', 'Transaction not checked in');
         }
 
         DB::transaction(function () use ($transaction) {
@@ -141,34 +141,6 @@ class TransactionController extends Controller
             $transaction->rentalUnit->update(['status' => 'available']);
         });
 
-        return back()->with('success', 'Transaction completed.');
-    }
-
-    public function validatePayment(Transaction $transaction)
-    {
-        $payment = $transaction->payment;
-
-        if (!$payment || $payment->payment_status === 'success') {
-            return back()->with('error', 'Payment already validated or not found.');
-        }
-
-        DB::transaction(function () use ($transaction, $payment) {
-            $payment->update([
-                'payment_status' => 'success',
-                'paid_at' => now(),
-            ]);
-
-            $transaction->update([
-                'status' => 'grace_period_active',
-                'start_time' => now(),
-                'grace_period_expires_at' => now()->addMinutes(15),
-            ]);
-
-            if (!in_array($transaction->payment_method, ['paylater', 'cash'])) {
-                $transaction->rentalUnit->update(['status' => 'booked']);
-            }
-        });
-
-        return back()->with('success', 'Payment validated successfully.');
+        return back()->with('success', 'Transaction completed');
     }
 }
