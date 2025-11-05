@@ -1,6 +1,6 @@
 import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
-import { Link, usePage } from "@inertiajs/react";
+import { Link, usePage, Head } from "@inertiajs/react";
 import { useState } from "react";
 import {
     LayoutDashboard,
@@ -63,6 +63,14 @@ export default function AuthenticatedLayout({ header, children }) {
     };
 
     return (
+        <>
+            <Head>
+                <title>{header ? `${header} - Admin` : "Admin Dashboard"}</title>
+                <link
+                    rel="icon"
+                    href="https://res.cloudinary.com/dr2cuy2gx/image/upload/v1761821348/Rentalin-Lettermark-White_g92vpz.png"
+                />
+            </Head>
         <div className="min-h-screen bg-gray-100">
             {/* Sidebar Desktop */}
             <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
@@ -245,5 +253,6 @@ export default function AuthenticatedLayout({ header, children }) {
                 </footer>
             </div>
         </div>
+        </>
     );
 }

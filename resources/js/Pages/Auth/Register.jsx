@@ -24,7 +24,7 @@ export default function Register() {
 
     return (
         <>
-            <Head title="Daftar - Rentalin" />
+            <Head title="Daftar" />
             <div className="min-h-screen flex flex-col lg:flex-row">
                 <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center text-white text-center p-12">
                     <div className="absolute inset-0 bg-black/50 z-10" />

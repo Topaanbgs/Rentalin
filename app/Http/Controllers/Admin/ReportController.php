@@ -20,7 +20,7 @@ use Carbon\Carbon;
 class ReportController extends Controller
 {
     /**
-     * @return Response
+     * Display the financial report dashboard
      */
     public function index(Request $request): Response
     {
@@ -28,34 +28,36 @@ class ReportController extends Controller
         $user = Auth::user();
         $staffId = $user->id;
         $staffName = $user->name;
+
+        // Define date range filter
         $dateFrom = $request->input('date_from', now()->startOfDay()->toDateString());
         $dateTo = $request->input('date_to', now()->endOfDay()->toDateString());
 
-        // Base query for staff's transactions
+        // Build base query for transactions
         $query = Transaction::with(['user', 'rentalUnit', 'payment'])
             ->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
 
-        // If created_by_staff_id exists, filter by current staff
+        // Filter transactions by staff if applicable
         if (Transaction::whereNotNull('created_by_staff_id')->exists()) {
             $query->where('created_by_staff_id', $staffId);
         }
 
         $transactions = $query->get();
 
-        // Calculate statistics
+        // Calculate general statistics
         $totalRevenue = Payment::whereIn('transaction_id', $transactions->pluck('id'))
             ->where('payment_status', 'success')
             ->sum('amount');
 
         $totalTransactions = $transactions->count();
-        
         $completedTransactions = $transactions->where('status', 'completed')->count();
-        
+
+        // Compute success rate
         $successRate = $totalTransactions > 0 
             ? round(($completedTransactions / $totalTransactions) * 100, 2) 
             : 0;
 
-        // Payment method breakdown
+        // Breakdown by payment method
         $paymentBreakdown = [
             'direct' => Payment::whereIn('transaction_id', $transactions->where('payment_method', 'direct')->pluck('id'))
                 ->where('payment_status', 'success')
@@ -68,11 +70,11 @@ class ReportController extends Controller
                 ->sum('amount'),
         ];
 
-        // Outstanding paylater (global, not filtered by staff for accuracy)
+        // Outstanding paylater invoices
         $outstandingPaylater = PaylaterInvoice::whereIn('status', ['unpaid', 'overdue'])
             ->sum('total_amount');
 
-        // Revenue per unit
+        // Aggregate revenue by rental unit
         $revenuePerUnit = $transactions->groupBy('rental_unit_id')->map(function ($items) {
             return [
                 'unit_name' => $items->first()->rentalUnit->name,
@@ -81,7 +83,7 @@ class ReportController extends Controller
             ];
         })->sortByDesc('total_revenue')->values();
 
-        // Recent transactions
+        // Prepare recent transactions summary
         $recentTransactions = $transactions->sortByDesc('created_at')->take(20)->map(function ($t) {
             return [
                 'id' => $t->id,
@@ -96,6 +98,7 @@ class ReportController extends Controller
             ];
         })->values();
 
+        // Render data to frontend
         return Inertia::render('Admin/Reports/Index', [
             'stats' => [
                 'total_revenue' => $totalRevenue,
@@ -115,16 +118,21 @@ class ReportController extends Controller
         ]);
     }
 
+    /**
+     * Export the financial report as Excel file
+     */
     public function export(Request $request): void
     {
         /** @var User $user */
         $user = Auth::user();
         $staffId = $user->id;
         $staffName = $user->name;
+
+        // Define date range filter
         $dateFrom = $request->input('date_from', now()->startOfDay()->toDateString());
         $dateTo = $request->input('date_to', now()->endOfDay()->toDateString());
 
-        // Get transactions
+        // Fetch transactions for export
         $query = Transaction::with(['user', 'rentalUnit', 'payment'])
             ->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
 
@@ -134,30 +142,32 @@ class ReportController extends Controller
 
         $transactions = $query->orderBy('created_at', 'desc')->get();
 
-        // Create spreadsheet
+        // Initialize spreadsheet
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Header info
+        // Report header section
         $sheet->setCellValue('A1', 'LAPORAN KEUANGAN RENTALIN');
         $sheet->mergeCells('A1:H1');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
 
+        // Meta information
         $sheet->setCellValue('A2', 'Staff: ' . $staffName);
         $sheet->setCellValue('A3', 'Periode: ' . Carbon::parse($dateFrom)->format('d M Y') . ' - ' . Carbon::parse($dateTo)->format('d M Y'));
         $sheet->setCellValue('A4', 'Dicetak: ' . now()->format('d M Y H:i:s').' WITA');
 
-        // Summary
+        // Display total revenue
         $totalRevenue = $transactions->sum('total_price');
         $sheet->setCellValue('A6', 'Total Pendapatan:');
         $sheet->setCellValue('B6', 'Rp ' . number_format((float)$totalRevenue, 0, ',', '.'));
         $sheet->getStyle('B6')->getFont()->setBold(true);
 
-        // Table header
+        // Table headers
         $headerRow = 8;
         $headers = ['No', 'Tanggal', 'ID Transaksi', 'Member', 'Unit', 'Durasi (mnt)', 'Total', 'Metode Bayar', 'Status'];
         $column = 'A';
+
         foreach ($headers as $header) {
             $sheet->setCellValue($column . $headerRow, $header);
             $sheet->getStyle($column . $headerRow)->getFont()->setBold(true);
@@ -168,7 +178,7 @@ class ReportController extends Controller
             $column++;
         }
 
-        // Data rows
+        // Fill data rows
         $row = $headerRow + 1;
         $no = 1;
         foreach ($transactions as $transaction) {
@@ -184,18 +194,18 @@ class ReportController extends Controller
             $row++;
         }
 
-        // Auto width
+        // Adjust column width automatically
         foreach (range('A', 'I') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
-        // Borders
+        // Apply border style to all cells
         $sheet->getStyle('A' . $headerRow . ':I' . ($row - 1))
             ->getBorders()
             ->getAllBorders()
             ->setBorderStyle(Border::BORDER_THIN);
 
-        // Generate file
+        // Output as downloadable Excel file
         $fileName = 'Laporan_Keuangan_Rentalin_' . $staffName . '_' . date('d_M_Y') . '.xlsx';
         $writer = new Xlsx($spreadsheet);
         

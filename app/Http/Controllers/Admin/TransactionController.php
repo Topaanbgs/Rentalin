@@ -10,10 +10,14 @@ use Inertia\Inertia;
 
 class TransactionController extends Controller
 {
+    /**
+     * Display transaction list with filters
+     */
     public function index(Request $request)
     {
         $query = Transaction::with(['user', 'rentalUnit', 'payment']);
 
+        // Apply filters
         if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
@@ -30,6 +34,7 @@ class TransactionController extends Controller
             $query->where('payment_method', $request->payment_method);
         }
 
+        // Paginate transaction results
         $transactions = $query->orderByDesc('created_at')
             ->paginate(20)
             ->through(fn($t) => [
@@ -62,6 +67,9 @@ class TransactionController extends Controller
         ]);
     }
 
+    /**
+     * Show transaction details
+     */
     public function show(Transaction $transaction)
     {
         $transaction->load(['user', 'rentalUnit', 'payment', 'paylaterTransaction.paylaterInvoice']);
@@ -105,6 +113,9 @@ class TransactionController extends Controller
         ]);
     }
 
+    /**
+     * Mark transaction as checked-in
+     */
     public function checkIn(Transaction $transaction)
     {
         if ($transaction->status !== 'grace_period_active') {
@@ -122,6 +133,9 @@ class TransactionController extends Controller
         return back()->with('success', 'Member checked in successfully');
     }
 
+    /**
+     * Complete a checked-in transaction
+     */
     public function complete(Transaction $transaction)
     {
         if ($transaction->status !== 'checked_in') {

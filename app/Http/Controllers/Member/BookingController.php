@@ -10,6 +10,7 @@ use Inertia\Inertia;
 
 class BookingController extends Controller
 {
+    // Display user booking list
     public function index()
     {
         $transactions = Transaction::where('user_id', Auth::id())
@@ -33,6 +34,7 @@ class BookingController extends Controller
         ]);
     }
 
+    // Handle new booking
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -42,16 +44,16 @@ class BookingController extends Controller
         ]);
 
         $unit = RentalUnit::findOrFail($validated['unit_id']);
-        
         /** @var User $user */
         $user = Auth::user();
-        
+
         $hours = ceil($validated['duration'] / 60);
         $totalPrice = $unit->hourly_rate * $hours;
 
         try {
             DB::beginTransaction();
 
+            // Create transaction and payment record
             $transaction = Transaction::create([
                 'user_id' => $user->id,
                 'rental_unit_id' => $unit->id,
@@ -82,11 +84,13 @@ class BookingController extends Controller
         }
     }
 
+    // Display payment page
     public function payment(Request $request)
     {
         $transactionId = $request->input('transaction');
         $transaction = Transaction::with(['rentalUnit', 'payment'])->findOrFail($transactionId);
 
+        // Validate ownership
         if ($transaction->user_id !== Auth::id()) {
             abort(403);
         }
@@ -100,6 +104,7 @@ class BookingController extends Controller
         ]);
     }
 
+    // Process payment
     public function processPayment(Request $request)
     {
         $validated = $request->validate([
@@ -108,14 +113,15 @@ class BookingController extends Controller
         ]);
 
         $transaction = Transaction::with(['payment', 'rentalUnit'])->findOrFail($validated['transaction_id']);
-        
         /** @var User $user */
         $user = Auth::user();
 
+        // Validate access
         if ($transaction->user_id !== $user->id) {
             abort(403);
         }
 
+        // Prevent duplicate payments
         if ($transaction->payment->payment_status === 'success') {
             return redirect()->route('member.dashboard')
                 ->with('info', 'Pembayaran sudah berhasil sebelumnya');
@@ -124,9 +130,11 @@ class BookingController extends Controller
         try {
             DB::beginTransaction();
 
+            // Update payment method
             $transaction->update(['payment_method' => $validated['payment_method']]);
             $transaction->payment->update(['payment_type' => $validated['payment_method']]);
 
+            // Handle each method type
             switch ($validated['payment_method']) {
                 case 'balance':
                     if ($user->balance < $transaction->total_price) {
@@ -135,9 +143,9 @@ class BookingController extends Controller
                     }
 
                     sleep(2);
-
                     $user->decrement('balance', (float)$transaction->total_price);
                     
+                    // Log debit transaction
                     BalanceTransaction::create([
                         'user_id' => $user->id,
                         'type' => 'debit',
@@ -165,7 +173,6 @@ class BookingController extends Controller
                     }
 
                     sleep(2);
-
                     $paylaterAccount->increment('used_limit', (float)$transaction->total_price);
                     break;
 
@@ -174,16 +181,19 @@ class BookingController extends Controller
                     break;
             }
 
+            // Mark payment success
             $transaction->payment->update([
                 'payment_status' => 'success',
                 'paid_at' => now(),
             ]);
 
+            // Activate grace period
             $transaction->update([
                 'status' => 'grace_period_active',
                 'grace_period_expires_at' => now()->addMinutes(15),
             ]);
 
+            // Set unit as booked
             $transaction->rentalUnit->update(['status' => 'booked']);
 
             DB::commit();
@@ -197,6 +207,7 @@ class BookingController extends Controller
         }
     }
 
+    // Show transaction detail
     public function show(Transaction $transaction)
     {
         if ($transaction->user_id !== Auth::id()) {
@@ -219,6 +230,7 @@ class BookingController extends Controller
         ]);
     }
 
+    // Cancel booking and handle refund if necessary
     public function cancel(Transaction $transaction)
     {
         if ($transaction->user_id !== Auth::id()) {
@@ -232,13 +244,16 @@ class BookingController extends Controller
         try {
             DB::beginTransaction();
 
+            // Update transaction and unit status
             $transaction->update(['status' => 'cancelled']);
             $transaction->rentalUnit->update(['status' => 'available']);
 
+            // Refund logic
             if ($transaction->payment->payment_status === 'success') {
                 if ($transaction->payment_method === 'balance') {
                     $transaction->user->increment('balance', (float)$transaction->total_price);
                     
+                    // Record refund
                     BalanceTransaction::create([
                         'user_id' => $transaction->user_id,
                         'type' => 'credit',
@@ -258,12 +273,13 @@ class BookingController extends Controller
             }
 
             DB::commit();
-
+            // Redirect with success message
             return redirect()->route('member.order')
                 ->with('success', 'Booking berhasil dibatalkan');
 
         } catch (\Exception $e) {
             DB::rollBack();
+            // Return error if payment fails
             return back()->with('error', 'Gagal membatalkan booking: ' . $e->getMessage());
         }
     }

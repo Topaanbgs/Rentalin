@@ -10,11 +10,13 @@ use Inertia\Inertia;
 
 class BalanceController extends Controller
 {
+    // Display user's balance and latest transactions
     public function index()
     {
         /** @var User $user */
         $user = Auth::user();
         
+        // Fetch latest 10 balance transactions
         $balanceTransactions = BalanceTransaction::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->limit(10)
@@ -27,12 +29,14 @@ class BalanceController extends Controller
                 'created_at' => $t->created_at,
             ]);
         
+        // Render Saldo page
         return Inertia::render('Members/Saldo', [
             'balance' => $user->balance,
             'transactions' => $balanceTransactions,
         ]);
     }
 
+    // Handle top-up process
     public function topup(Request $request)
     {
         $validated = $request->validate([
@@ -46,10 +50,13 @@ class BalanceController extends Controller
         try {
             DB::beginTransaction();
 
+            // Simulate payment delay
             sleep(2);
 
+            // Increase user balance
             $user->increment('balance', $validated['amount']);
 
+            // Log transaction
             BalanceTransaction::create([
                 'user_id' => $user->id,
                 'type' => 'credit',
@@ -72,6 +79,7 @@ class BalanceController extends Controller
         }
     }
 
+    // Display transaction history
     public function history()
     {
         $transactions = Transaction::where('user_id', Auth::id())
@@ -87,6 +95,7 @@ class BalanceController extends Controller
                 'created_at' => $t->created_at,
             ]);
 
+        // Render Balance history page
         return Inertia::render('Members/Balance', [
             'transactions' => $transactions,
             'balance' => Auth::user()->balance,

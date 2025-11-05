@@ -10,10 +10,14 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
+    /**
+     * Display member dashboard with available units, user stats, and active bookings.
+     */
     public function index()
     {
         $user = Auth::user();
         
+        // Fetch all rental units
         $units = RentalUnit::orderBy('name')
             ->get()
             ->map(fn($u) => [
@@ -25,6 +29,7 @@ class DashboardController extends Controller
                 'status' => $u->status,
             ]);
 
+        // Compile user financial and verification statistics
         $stats = [
             'balance' => $user->balance,
             'paylater_limit' => $user->paylaterAccount->total_limit ?? 0,
@@ -34,6 +39,7 @@ class DashboardController extends Controller
             'is_verified' => $user->is_verified,
         ];
 
+        // Retrieve ongoing bookings
         $activeBookings = Transaction::where('user_id', $user->id)
             ->whereIn('status', ['grace_period_active', 'checked_in'])
             ->with('rentalUnit')
@@ -47,6 +53,7 @@ class DashboardController extends Controller
                 'grace_period_expires_at' => $t->grace_period_expires_at,
             ]);
 
+        // Render dashboard view with data
         return Inertia::render('Members/Index', [
             'units' => $units,
             'stats' => $stats,

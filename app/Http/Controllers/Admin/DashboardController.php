@@ -14,13 +14,16 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        // Define date boundaries for daily and monthly metrics
         $today = now()->startOfDay();
         $thisMonth = now()->startOfMonth();
 
+        // Configure pagination parameters
         $activeBookingsPage = $request->get('activeBookingsPage', 1);
         $recentTransactionsPage = $request->get('recentTransactionsPage', 1);
         $perPage = 5;
 
+        // Aggregate dashboard statistics
         $stats = [
             'total_units' => RentalUnit::count(),
             'available_units' => RentalUnit::where('status', 'available')->count(),
@@ -35,6 +38,7 @@ class DashboardController extends Controller
             'pending_payments' => Payment::where('payment_status', 'waiting')->count(),
         ];
 
+        // Retrieve active bookings with related user and unit info
         $activeBookings = Transaction::with(['user', 'rentalUnit'])
             ->whereIn('status', ['grace_period_active', 'checked_in', 'in_progress'])
             ->orderBy('start_time', 'desc')
@@ -51,6 +55,7 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Retrieve recent transactions with payment details
         $recentTransactions = Transaction::with(['user', 'rentalUnit', 'payment'])
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'recentTransactionsPage', $recentTransactionsPage)
@@ -67,6 +72,7 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Render the dashboard view with prepared data
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
             'activeBookings' => $activeBookings,

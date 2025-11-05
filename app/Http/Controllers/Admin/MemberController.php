@@ -12,13 +12,14 @@ class MemberController extends Controller
 {
     public function index(Request $request)
     {
+        // Base query for members with Paylater data
         $query = User::with('paylaterAccount')
             ->where('role', 'member');
 
-        // Search by name or email
+        // Apply search filter
         if ($request->has('search') && $request->search) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('phone_number', 'like', "%{$search}%");
@@ -30,6 +31,7 @@ class MemberController extends Controller
             $query->where('is_verified', $request->verified === 'true');
         }
 
+        // Paginate and transform results
         $members = $query->orderBy('created_at', 'desc')
             ->paginate(20)
             ->through(function ($member) {
@@ -51,6 +53,7 @@ class MemberController extends Controller
                 ];
             });
 
+        // Render member index view
         return Inertia::render('Admin/Members/Index', [
             'members' => $members,
             'filters' => $request->only(['search', 'verified']),
@@ -59,8 +62,10 @@ class MemberController extends Controller
 
     public function show(User $member)
     {
+        // Load related Paylater, Transaction, and Invoice data
         $member->load(['paylaterAccount', 'transactions.rentalUnit', 'transactions.payment', 'paylaterInvoices']);
 
+        // Transform detail for view
         $data = [
             'id' => $member->id,
             'name' => $member->name,
@@ -97,6 +102,7 @@ class MemberController extends Controller
             }),
         ];
 
+        // Render member detail page
         return Inertia::render('Admin/Members/Show', [
             'member' => $data,
         ]);
@@ -104,13 +110,15 @@ class MemberController extends Controller
 
     public function updateVerification(Request $request, User $member)
     {
+        // Validate request
         $validated = $request->validate([
             'is_verified' => 'required|boolean',
         ]);
 
+        // Update verification status
         $member->update(['is_verified' => $validated['is_verified']]);
 
-        // Status paylater based on verification
+        // Update Paylater account if exists
         if ($member->paylaterAccount) {
             $member->paylaterAccount->update([
                 'status' => $validated['is_verified'] ? 'active' : 'blocked'

@@ -19,7 +19,7 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <>
-            <Head title="Masuk - Rentalin" />
+            <Head title="Masuk" />
             {/* Left Section */}
             <div className="min-h-screen flex flex-col lg:flex-row">
                 <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 bg-black/80">

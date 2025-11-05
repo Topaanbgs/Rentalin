@@ -209,7 +209,7 @@ export default function Show({ transaction }) {
                                         className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#0066CC] to-[#0052A3] text-white rounded-lg hover:opacity-90 shadow font-semibold"
                                     >
                                         <CheckCircle className="w-4 h-4" />{" "}
-                                        Check-In Anggota
+                                        Check-In
                                     </button>
                                 )}
                                 {canComplete && (

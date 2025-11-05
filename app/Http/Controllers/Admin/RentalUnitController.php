@@ -11,6 +11,7 @@ class RentalUnitController extends Controller
 {
     public function index()
     {
+        // Retrieve all units with total booking count
         $units = RentalUnit::withCount(['transactions as total_bookings'])
             ->orderBy('created_at', 'desc')
             ->get()
@@ -26,6 +27,7 @@ class RentalUnitController extends Controller
                 ];
             });
 
+        // Render unit list
         return Inertia::render('Admin/RentalUnits/Index', [
             'units' => $units,
         ]);
@@ -33,11 +35,13 @@ class RentalUnitController extends Controller
 
     public function create()
     {
+        // Render unit creation form
         return Inertia::render('Admin/RentalUnits/Create');
     }
 
     public function store(Request $request)
     {
+        // Validate request input
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:rental_units',
             'type' => 'required|in:PS4,PS5,PS4_PRO,PS5_DIGITAL',
@@ -45,6 +49,7 @@ class RentalUnitController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        // Store new unit
         RentalUnit::create($validated);
 
         return redirect()->route('admin.units.index')
@@ -53,6 +58,7 @@ class RentalUnitController extends Controller
 
     public function edit(RentalUnit $unit)
     {
+        // Render edit form with current unit data
         return Inertia::render('Admin/RentalUnits/Edit', [
             'unit' => [
                 'id' => $unit->id,
@@ -67,6 +73,7 @@ class RentalUnitController extends Controller
 
     public function update(Request $request, RentalUnit $unit)
     {
+        // Validate request for update
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:rental_units,name,' . $unit->id,
             'type' => 'required|in:PS4,PS5,PS4_PRO,PS5_DIGITAL',
@@ -75,6 +82,7 @@ class RentalUnitController extends Controller
             'status' => 'required|in:available,booked,in_use,maintenance',
         ]);
 
+        // Update record
         $unit->update($validated);
 
         return redirect()->route('admin.units.index')
@@ -83,7 +91,7 @@ class RentalUnitController extends Controller
 
     public function destroy(RentalUnit $unit)
     {
-        // Check if unit has active bookings
+        // Check for active bookings before deletion
         $hasActiveBookings = $unit->transactions()
             ->whereIn('status', ['grace_period_active', 'checked_in', 'in_progress'])
             ->exists();
@@ -92,6 +100,7 @@ class RentalUnitController extends Controller
             return back()->with('error', 'Cannot delete unit with active bookings');
         }
 
+        // Delete record
         $unit->delete();
 
         return redirect()->route('admin.units.index')
@@ -100,6 +109,7 @@ class RentalUnitController extends Controller
 
     public function updateStatus(Request $request, RentalUnit $unit)
     {
+        // Validate and update status
         $validated = $request->validate([
             'status' => 'required|in:available,booked,in_use,maintenance',
         ]);
