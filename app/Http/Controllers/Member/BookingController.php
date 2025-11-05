@@ -174,6 +174,40 @@ class BookingController extends Controller
 
                     sleep(2);
                     $paylaterAccount->increment('used_limit', (float)$transaction->total_price);
+
+                    // Create or find invoice for this month
+                    $invoice = \App\Models\PaylaterInvoice::firstOrCreate(
+            [
+                            'user_id' => $user->id,
+                            'status' => 'unpaid',
+                            'due_date' => now()->endOfMonth(),
+                        ],
+                [
+                            'total_amount' => 0,
+                            'paid_amount' => 0,
+                        ]
+                    );
+                    // Add transaction to invoice
+                    \App\Models\PaylaterTransaction::create([
+                        'paylater_invoice_id' => $invoice->id,
+                        'transaction_id' => $transaction->id,
+                        'amount' => $transaction->total_price,
+                    ]);
+
+                    // Update invoice total
+                    $invoice->increment('total_amount', (float)$transaction->total_price);
+    
+                    $transaction->payment->update([
+                        'payment_status' => 'success',
+                        'paid_at' => now(),
+                    ]);
+
+                    $transaction->update([
+                        'status' => 'grace_period_active',
+                        'grace_period_expires_at' => now()->addMinutes(15),
+                    ]);
+
+                    $transaction->rentalUnit->update(['status' => 'booked']);
                     break;
 
                 case 'qris':
