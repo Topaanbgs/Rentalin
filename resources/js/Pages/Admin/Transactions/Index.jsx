@@ -16,7 +16,7 @@ export default function Index({ transactions, availableUnits, filters }) {
         customer_name: "",
         rental_unit_id: "",
         duration_hours: 1,
-        amount_paid: 0,
+        amount_paid: "",
     });
 
     const formatCurrency = (a) =>
@@ -380,13 +380,15 @@ export default function Index({ transactions, availableUnits, filters }) {
                                     onChange={(e) =>
                                         setData(
                                             "amount_paid",
-                                            parseFloat(e.target.value) || 0
+                                            e.target.value === ""
+                                                ? ""
+                                                : parseFloat(e.target.value)
                                         )
                                     }
                                     min="0"
                                     step="1000"
                                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#0066CC]"
-                                    placeholder="0"
+                                    placeholder="Masukkan nominal"
                                 />
                                 {errors.amount_paid && (
                                     <p className="text-red-500 text-xs mt-1">

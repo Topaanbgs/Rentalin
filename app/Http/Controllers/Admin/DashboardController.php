@@ -47,7 +47,7 @@ class DashboardController extends Controller
                 return [
                     'id' => $transaction->id,
                     'qr_code' => $transaction->qr_code,
-                    'member_name' => $transaction->user->name,
+                    'member_name' => $transaction->customer_name ?: $transaction->user->name,
                     'member_phone' => $transaction->user->phone_number,
                     'unit_name' => $transaction->rentalUnit->name,
                     'status' => $transaction->status,
@@ -62,7 +62,7 @@ class DashboardController extends Controller
             ->through(function ($transaction) {
                 return [
                     'id' => $transaction->id,
-                    'member_name' => $transaction->user->name,
+                    'member_name' => $transaction->customer_name ?: $transaction->user->name,
                     'unit_name' => $transaction->rentalUnit->name,
                     'total_price' => $transaction->total_price,
                     'payment_method' => $transaction->payment_method,

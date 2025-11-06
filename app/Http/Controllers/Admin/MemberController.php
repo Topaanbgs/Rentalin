@@ -10,13 +10,17 @@ use Inertia\Inertia;
 
 class MemberController extends Controller
 {
+    /**
+     * Display a paginated list of members with optional filters.
+     */
     public function index(Request $request)
     {
-        // Base query for members with Paylater data
+        // Base query for member users excluding the guest account
         $query = User::with('paylaterAccount')
-            ->where('role', 'member');
+            ->where('role', 'member')
+            ->where('email', '!=', 'guest@rentalin.system');
 
-        // Apply search filter
+        // Apply search filter (by name, email, or phone)
         if ($request->has('search') && $request->search) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -31,7 +35,7 @@ class MemberController extends Controller
             $query->where('is_verified', $request->verified === 'true');
         }
 
-        // Paginate and transform results
+        // Fetch and transform paginated results
         $members = $query->orderBy('created_at', 'desc')
             ->paginate(20)
             ->through(function ($member) {
@@ -53,19 +57,22 @@ class MemberController extends Controller
                 ];
             });
 
-        // Render member index view
+        // Render member list page
         return Inertia::render('Admin/Members/Index', [
             'members' => $members,
             'filters' => $request->only(['search', 'verified']),
         ]);
     }
 
+    /**
+     * Display details for a specific member.
+     */
     public function show(User $member)
     {
-        // Load related Paylater, Transaction, and Invoice data
+        // Load related models for detailed view
         $member->load(['paylaterAccount', 'transactions.rentalUnit', 'transactions.payment', 'paylaterInvoices']);
 
-        // Transform detail for view
+        // Structure data for front-end
         $data = [
             'id' => $member->id,
             'name' => $member->name,
@@ -102,23 +109,26 @@ class MemberController extends Controller
             }),
         ];
 
-        // Render member detail page
+        // Render member details page
         return Inertia::render('Admin/Members/Show', [
             'member' => $data,
         ]);
     }
 
+    /**
+     * Update verification status for a member and adjust PayLater status accordingly.
+     */
     public function updateVerification(Request $request, User $member)
     {
-        // Validate request
+        // Validate verification flag
         $validated = $request->validate([
             'is_verified' => 'required|boolean',
         ]);
 
-        // Update verification status
+        // Update member verification status
         $member->update(['is_verified' => $validated['is_verified']]);
 
-        // Update Paylater account if exists
+        // Sync PayLater account status and limit if available
         if ($member->paylaterAccount) {
             $member->paylaterAccount->update([
                 'status' => $validated['is_verified'] ? 'active' : 'blocked'
@@ -126,6 +136,7 @@ class MemberController extends Controller
             $member->paylaterAccount->updateLimit();
         }
 
+        // Redirect with success message
         return back()->with('success', 'Member verification updated successfully');
     }
 }
