@@ -44,7 +44,7 @@ class RentalUnitController extends Controller
         // Validate request input
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:rental_units',
-            'type' => 'required|in:PS4,PS5,PS4_PRO,PS5_DIGITAL',
+            'type' => 'required|in:PS1,PS2,PS3,PS4,PS5',
             'hourly_rate' => 'required|numeric|min:0',
             'description' => 'nullable|string',
         ]);
@@ -76,7 +76,7 @@ class RentalUnitController extends Controller
         // Validate request for update
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:rental_units,name,' . $unit->id,
-            'type' => 'required|in:PS4,PS5,PS4_PRO,PS5_DIGITAL',
+            'type' => 'required|in:PS1,PS2,PS3,PS4,PS5',
             'hourly_rate' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'status' => 'required|in:available,booked,in_use,maintenance',

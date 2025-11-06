@@ -4,8 +4,19 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\{DashboardController, RentalUnitController, TransactionController, MemberController, ReportController};
-use App\Http\Controllers\Member\{DashboardController as MemberDashboard, BookingController, BalanceController, PaylaterController};
+use App\Http\Controllers\Admin\{
+    DashboardController, 
+    RentalUnitController, 
+    TransactionController, 
+    MemberController, 
+    ReportController
+};
+use App\Http\Controllers\Member\{
+    DashboardController as MemberDashboard, 
+    BookingController, 
+    BalanceController, 
+    PaylaterController
+};
 
 // Guest Routes
 Route::get('/', function () {
@@ -23,6 +34,8 @@ Route::get('/consoles', fn() => Inertia::render('Guest/Consoles'))->name('guest.
 
 // Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {
+    
+    // Dashboard redirect based on role
     Route::get('/dashboard', function () {
         $user = Auth::user();
         return $user->role === 'staff' 
@@ -30,8 +43,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
             : redirect()->route('member.dashboard');
     })->name('dashboard');
 
+    // Profile Management
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+        Route::patch('/', [ProfileController::class, 'update'])->name('update');
+        Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
+    });
+
     // Member Routes
     Route::prefix('member')->name('member.')->middleware('role:member')->group(function () {
+        
+        // Dashboard
         Route::get('/dashboard', [MemberDashboard::class, 'index'])->name('dashboard');
         
         // Booking & Orders
@@ -67,37 +89,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]))->name('setting');
     });
 
-    // Profile Management
-    Route::prefix('profile')->name('profile.')->group(function () {
-        Route::get('/', [ProfileController::class, 'edit'])->name('edit');
-        Route::patch('/', [ProfileController::class, 'update'])->name('update');
-        Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
+    // Admin Routes
+    Route::prefix('admin')->name('admin.')->middleware('role:staff')->group(function () {
+        
+        // Dashboard
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Rental Units Management
+        Route::resource('units', RentalUnitController::class);
+        Route::patch('units/{unit}/status', [RentalUnitController::class, 'updateStatus'])->name('units.update-status');
+
+        // Transaction Management
+        Route::get('transactions', [TransactionController::class, 'index'])->name('transactions.index');
+        Route::post('transactions/cash', [TransactionController::class, 'storeCash'])->name('transactions.store-cash');
+        Route::get('transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
+        Route::post('transactions/{transaction}/check-in', [TransactionController::class, 'checkIn'])->name('transactions.check-in');
+        Route::post('transactions/{transaction}/complete', [TransactionController::class, 'complete'])->name('transactions.complete');
+        Route::post('transactions/{transaction}/validate-payment', [TransactionController::class, 'validatePayment'])->name('transactions.validate-payment');
+
+        // Member Management
+        Route::get('members', [MemberController::class, 'index'])->name('members.index');
+        Route::get('members/{member}', [MemberController::class, 'show'])->name('members.show');
+        Route::patch('members/{member}/verification', [MemberController::class, 'updateVerification'])->name('members.update-verification');
+
+        // Financial Reports
+        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
     });
-});
-
-// Admin Routes
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:staff'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    // Rental Units
-    Route::resource('units', RentalUnitController::class);
-    Route::patch('units/{unit}/status', [RentalUnitController::class, 'updateStatus'])->name('units.update-status');
-
-    // Transactions
-    Route::get('transactions', [TransactionController::class, 'index'])->name('transactions.index');
-    Route::get('transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
-    Route::post('transactions/{transaction}/check-in', [TransactionController::class, 'checkIn'])->name('transactions.check-in');
-    Route::post('transactions/{transaction}/complete', [TransactionController::class, 'complete'])->name('transactions.complete');
-    Route::post('transactions/{transaction}/validate-payment', [TransactionController::class, 'validatePayment'])->name('transactions.validate-payment');
-
-    // Members
-    Route::get('members', [MemberController::class, 'index'])->name('members.index');
-    Route::get('members/{member}', [MemberController::class, 'show'])->name('members.show');
-    Route::patch('members/{member}/verification', [MemberController::class, 'updateVerification'])->name('members.update-verification');
-
-    // Reports
-    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
 });
 
 require __DIR__ . '/auth.php';
