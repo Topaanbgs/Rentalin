@@ -15,7 +15,13 @@ export default function Setting({ user }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        patch(route("profile.update"));
+        patch(route("profile.update"), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setData("password", "");
+                setData("password_confirmation", "");
+            },
+        });
     };
 
     return (
@@ -33,7 +39,13 @@ export default function Setting({ user }) {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    {flash?.error && (
+                        <div className="mb-4 p-3 bg-red-500/20 border border-red-500/40 rounded-lg text-red-400 text-sm">
+                            {flash.error}
+                        </div>
+                    )}
+
+                    <div className="space-y-6">
                         <div>
                             <label className="block text-gray-300 mb-2">
                                 Nama Lengkap
@@ -110,14 +122,15 @@ export default function Setting({ user }) {
                         </div>
 
                         <button
-                            type="submit"
+                            type="button"
+                            onClick={handleSubmit}
                             disabled={processing}
                             className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#00D8C8]/20 border border-[#00D8C8]/50 text-[#00D8C8] font-semibold hover:bg-[#00D8C8]/30 transition-all disabled:opacity-50"
                         >
-                            <Save size={18} />{" "}
+                            <Save size={18} />
                             {processing ? "Menyimpan..." : "Simpan Perubahan"}
                         </button>
-                    </form>
+                    </div>
                 </div>
             </MemberLayout>
         </>

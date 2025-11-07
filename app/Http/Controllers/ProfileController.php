@@ -14,7 +14,7 @@ use Inertia\Response;
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Display the profile edit page.
      */
     public function edit(Request $request): Response
     {
@@ -29,32 +29,39 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
+        // Fill user model with validated data
         $request->user()->fill($request->validated());
 
+        // Reset email verification if email has been changed
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
         }
 
+        // Save updated user data
         $request->user()->save();
 
-        return Redirect::route('profile.edit');
+        return back()->with('success', 'Profile updated successfully');
     }
 
     /**
-     * Delete the user's account.
+     * Delete the authenticated user's account.
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Validate user password before deletion
         $request->validate([
             'password' => ['required', 'current_password'],
         ]);
 
         $user = $request->user();
 
+        // Log out the user
         Auth::logout();
 
+        // Delete user account
         $user->delete();
 
+        // Invalidate and regenerate session
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
