@@ -1,5 +1,5 @@
 import { usePage, router, Head } from "@inertiajs/react";
-import { Camera, CheckCircle } from "lucide-react";
+import { Camera, CheckCircle, Loader2 } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import MemberLayout from "@/Layouts/MemberLayout";
 
@@ -10,6 +10,7 @@ export default function Verification({ user }) {
     const canvasRef = useRef(null);
     const [captured, setCaptured] = useState(false);
     const [photo, setPhoto] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (!userData?.is_verified) {
@@ -59,9 +60,20 @@ export default function Verification({ user }) {
             return;
         }
 
-        router.post(route("member.verification.upload"), {
-            photo: photo,
-        });
+        setIsSubmitting(true);
+        router.post(
+            route("member.verification.upload"),
+            {
+                photo: photo,
+            },
+            {
+                onFinish: () => {
+                    setIsSubmitting(false);
+                    setCaptured(false);
+                    setPhoto(null);
+                },
+            }
+        );
     };
 
     if (userData?.is_verified) {
@@ -79,7 +91,7 @@ export default function Verification({ user }) {
                         </h2>
                         <p className="text-gray-400">
                             Akun kamu sudah diverifikasi. Kamu dapat menggunakan
-                            semua fitur Rentalin.
+                            semua fitur Rentalin termasuk Paylater.
                         </p>
                     </div>
                 </MemberLayout>
@@ -100,6 +112,26 @@ export default function Verification({ user }) {
                         Posisikan KTP kamu di dalam kotak yang ditandai dan
                         ambil foto untuk verifikasi.
                     </p>
+
+                    {flash?.success && (
+                        <div className="mb-6 p-4 bg-green-500/20 border border-green-500/40 rounded-lg text-green-400 text-sm text-left">
+                            <div className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="font-semibold mb-1">
+                                        Berhasil!
+                                    </p>
+                                    <p>{flash.success}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {flash?.error && (
+                        <div className="mb-6 p-4 bg-red-500/20 border border-red-500/40 rounded-lg text-red-400 text-sm">
+                            {flash.error}
+                        </div>
+                    )}
 
                     <div className="relative bg-black rounded-lg overflow-hidden">
                         {!captured ? (
@@ -135,23 +167,34 @@ export default function Verification({ user }) {
                         {!captured ? (
                             <button
                                 onClick={handleCapture}
-                                className="py-3 px-6 rounded-lg bg-[#00D8C8]/20 border border-[#00D8C8]/50 text-[#00D8C8] font-semibold hover:bg-[#00D8C8]/30 transition-all"
+                                disabled={isSubmitting}
+                                className="py-3 px-6 rounded-lg bg-[#00D8C8]/20 border border-[#00D8C8]/50 text-[#00D8C8] font-semibold hover:bg-[#00D8C8]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Ambil Foto
                             </button>
                         ) : (
                             <>
                                 <button
-                                    onClick={() => setCaptured(false)}
-                                    className="py-3 px-6 rounded-lg bg-gray-700/50 border border-gray-600 text-gray-300 font-semibold hover:bg-gray-600/50 transition-all"
+                                    onClick={() => {
+                                        setCaptured(false);
+                                        setPhoto(null);
+                                    }}
+                                    disabled={isSubmitting}
+                                    className="py-3 px-6 rounded-lg bg-gray-700/50 border border-gray-600 text-gray-300 font-semibold hover:bg-gray-600/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Foto Ulang
                                 </button>
                                 <button
                                     onClick={handleVerify}
-                                    className="py-3 px-6 rounded-lg bg-[#00D8C8]/20 border border-[#00D8C8]/50 text-[#00D8C8] font-semibold hover:bg-[#00D8C8]/30 transition-all"
+                                    disabled={isSubmitting}
+                                    className="py-3 px-6 rounded-lg bg-[#00D8C8]/20 border border-[#00D8C8]/50 text-[#00D8C8] font-semibold hover:bg-[#00D8C8]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                                 >
-                                    Verifikasi
+                                    {isSubmitting && (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    )}
+                                    {isSubmitting
+                                        ? "Memproses..."
+                                        : "Verifikasi"}
                                 </button>
                             </>
                         )}

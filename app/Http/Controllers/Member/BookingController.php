@@ -10,7 +10,9 @@ use Inertia\Inertia;
 
 class BookingController extends Controller
 {
-    // Display user booking list
+    /**
+     * Display all booking transactions for the authenticated user.
+     */
     public function index()
     {
         $transactions = Transaction::where('user_id', Auth::id())
@@ -22,7 +24,7 @@ class BookingController extends Controller
                 'booking_code' => $t->booking_code,
                 'unit_name' => $t->rentalUnit->name,
                 'duration' => $t->duration,
-                'total_price' => $t->total_price,
+                'total_price' => (float) $t->total_price,
                 'payment_method' => $t->payment_method,
                 'status' => $t->status,
                 'created_at' => $t->created_at,
@@ -34,9 +36,12 @@ class BookingController extends Controller
         ]);
     }
 
-    // Handle new booking
+    /**
+     * Create a new booking transaction.
+     */
     public function store(Request $request)
     {
+        // Validate user input
         $validated = $request->validate([
             'unit_id' => 'required|exists:rental_units,id',
             'duration' => 'required|integer|min:60|max:480',
@@ -47,13 +52,14 @@ class BookingController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
+        // Calculate total price based on duration
         $hours = ceil($validated['duration'] / 60);
-        $totalPrice = $unit->hourly_rate * $hours;
+        $totalPrice = (float) ($unit->hourly_rate * $hours);
 
         try {
             DB::beginTransaction();
 
-            // Create transaction and payment record
+            // Create booking transaction
             $transaction = Transaction::create([
                 'user_id' => $user->id,
                 'rental_unit_id' => $unit->id,
@@ -65,6 +71,7 @@ class BookingController extends Controller
                 'booking_code' => 'BK' . strtoupper(uniqid()),
             ]);
 
+            // Initialize payment record
             Payment::create([
                 'transaction_id' => $transaction->id,
                 'amount' => $totalPrice,
@@ -84,13 +91,15 @@ class BookingController extends Controller
         }
     }
 
-    // Display payment page
+    /**
+     * Display payment page for a specific transaction.
+     */
     public function payment(Request $request)
     {
         $transactionId = $request->input('transaction');
         $transaction = Transaction::with(['rentalUnit', 'payment'])->findOrFail($transactionId);
 
-        // Validate ownership
+        // Restrict access to the transaction owner
         if ($transaction->user_id !== Auth::id()) {
             abort(403);
         }
@@ -99,14 +108,42 @@ class BookingController extends Controller
         $user = Auth::user();
 
         return Inertia::render('Members/Payment', [
-            'transaction' => $transaction,
-            'user' => $user->load('paylaterAccount'),
+            'transaction' => [
+                'id' => $transaction->id,
+                'booking_code' => $transaction->booking_code,
+                'duration' => $transaction->duration,
+                'total_price' => (float) $transaction->total_price,
+                'payment_method' => $transaction->payment_method,
+                'status' => $transaction->status,
+                'rental_unit' => [
+                    'id' => $transaction->rentalUnit->id,
+                    'name' => $transaction->rentalUnit->name,
+                    'type' => $transaction->rentalUnit->type,
+                ],
+                'payment' => $transaction->payment,
+            ],
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'balance' => (float) $user->balance,
+                'paylater_account' => $user->paylaterAccount ? [
+                    'total_limit' => (float) $user->paylaterAccount->total_limit,
+                    'used_limit' => (float) $user->paylaterAccount->used_limit,
+                    'available_limit' => (float) $user->paylaterAccount->available_limit,
+                    'trust_score' => $user->paylaterAccount->trust_score,
+                    'status' => $user->paylaterAccount->status,
+                ] : null,
+            ],
         ]);
     }
 
-    // Process payment
+    /**
+     * Process user payment based on selected method.
+     */
     public function processPayment(Request $request)
     {
+        // Validate payment request
         $validated = $request->validate([
             'transaction_id' => 'required|exists:transactions,id',
             'payment_method' => 'required|in:qris,balance,paylater',
@@ -116,16 +153,18 @@ class BookingController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        // Validate access
         if ($transaction->user_id !== $user->id) {
             abort(403);
         }
 
-        // Prevent duplicate payments
+        // Prevent reprocessing if payment already succeeded
         if ($transaction->payment->payment_status === 'success') {
             return redirect()->route('member.dashboard')
                 ->with('info', 'Pembayaran sudah berhasil sebelumnya');
         }
+
+        $totalPrice = (float) $transaction->total_price;
+        $userBalance = (float) $user->balance;
 
         try {
             DB::beginTransaction();
@@ -134,22 +173,21 @@ class BookingController extends Controller
             $transaction->update(['payment_method' => $validated['payment_method']]);
             $transaction->payment->update(['payment_type' => $validated['payment_method']]);
 
-            // Handle each method type
             switch ($validated['payment_method']) {
                 case 'balance':
-                    if ($user->balance < $transaction->total_price) {
+                    // Process payment using account balance
+                    if ($userBalance < $totalPrice) {
                         DB::rollBack();
                         return back()->with('error', 'Saldo tidak mencukupi');
                     }
 
                     sleep(2);
-                    $user->decrement('balance', (float)$transaction->total_price);
+                    $user->decrement('balance', $totalPrice);
                     
-                    // Log debit transaction
                     BalanceTransaction::create([
                         'user_id' => $user->id,
                         'type' => 'debit',
-                        'amount' => $transaction->total_price,
+                        'amount' => $totalPrice,
                         'description' => 'Sewa ' . $transaction->rentalUnit->name,
                         'reference' => $transaction->booking_code,
                         'metadata' => [
@@ -160,74 +198,61 @@ class BookingController extends Controller
                     break;
 
                 case 'paylater':
+                    // Handle Paylater payment
                     $paylaterAccount = $user->paylaterAccount;
                     if (!$paylaterAccount) {
                         DB::rollBack();
                         return back()->with('error', 'Akun paylater belum aktif');
                     }
 
-                    $available = $paylaterAccount->total_limit - $paylaterAccount->used_limit;
-                    if ($available < $transaction->total_price) {
+                    $available = (float) ($paylaterAccount->total_limit - $paylaterAccount->used_limit);
+                    if ($available < $totalPrice) {
                         DB::rollBack();
                         return back()->with('error', 'Limit paylater tidak mencukupi');
                     }
 
                     sleep(2);
-                    $paylaterAccount->increment('used_limit', (float)$transaction->total_price);
+                    $paylaterAccount->increment('used_limit', $totalPrice);
 
-                    // Create or find invoice for this month
+                    // Attach transaction to Paylater invoice
                     $invoice = \App\Models\PaylaterInvoice::firstOrCreate(
-            [
+                        [
                             'user_id' => $user->id,
                             'status' => 'unpaid',
                             'due_date' => now()->endOfMonth(),
                         ],
-                [
+                        [
                             'total_amount' => 0,
                             'paid_amount' => 0,
                         ]
                     );
-                    // Add transaction to invoice
+
                     \App\Models\PaylaterTransaction::create([
                         'paylater_invoice_id' => $invoice->id,
                         'transaction_id' => $transaction->id,
-                        'amount' => $transaction->total_price,
+                        'amount' => $totalPrice,
                     ]);
 
-                    // Update invoice total
-                    $invoice->increment('total_amount', (float)$transaction->total_price);
-    
-                    $transaction->payment->update([
-                        'payment_status' => 'success',
-                        'paid_at' => now(),
-                    ]);
-
-                    $transaction->update([
-                        'status' => 'grace_period_active',
-                        'grace_period_expires_at' => now()->addMinutes(15),
-                    ]);
-
-                    $transaction->rentalUnit->update(['status' => 'booked']);
+                    $invoice->increment('total_amount', $totalPrice);
                     break;
 
                 case 'qris':
+                    // Simulate QRIS payment
                     sleep(2);
                     break;
             }
 
-            // Mark payment success
+            // Finalize payment and update statuses
             $transaction->payment->update([
                 'payment_status' => 'success',
                 'paid_at' => now(),
             ]);
 
-            // Activate grace period
             $transaction->update([
                 'status' => 'grace_period_active',
                 'grace_period_expires_at' => now()->addMinutes(15),
             ]);
 
-            // Set unit as booked
             $transaction->rentalUnit->update(['status' => 'booked']);
 
             DB::commit();
@@ -241,9 +266,12 @@ class BookingController extends Controller
         }
     }
 
-    // Show transaction detail
+    /**
+     * Show details for a specific transaction.
+     */
     public function show(Transaction $transaction)
     {
+        // Restrict access to the transaction owner
         if ($transaction->user_id !== Auth::id()) {
             abort(403);
         }
@@ -254,7 +282,7 @@ class BookingController extends Controller
                 'booking_code' => $transaction->booking_code,
                 'unit_name' => $transaction->rentalUnit->name,
                 'status' => $transaction->status,
-                'total_price' => $transaction->total_price,
+                'total_price' => (float) $transaction->total_price,
                 'duration' => $transaction->duration,
                 'payment_method' => $transaction->payment_method,
                 'start_time' => $transaction->start_time,
@@ -264,34 +292,37 @@ class BookingController extends Controller
         ]);
     }
 
-    // Cancel booking and handle refund if necessary
+    /**
+     * Cancel an active or pending booking.
+     */
     public function cancel(Transaction $transaction)
     {
         if ($transaction->user_id !== Auth::id()) {
             abort(403);
         }
 
+        // Allow cancellation only for specific statuses
         if (!in_array($transaction->status, ['pending_payment', 'grace_period_active'])) {
             return back()->with('error', 'Transaksi tidak dapat dibatalkan');
         }
 
+        $totalPrice = (float) $transaction->total_price;
+
         try {
             DB::beginTransaction();
 
-            // Update transaction and unit status
             $transaction->update(['status' => 'cancelled']);
             $transaction->rentalUnit->update(['status' => 'available']);
 
-            // Refund logic
+            // Handle refund if payment was successful
             if ($transaction->payment->payment_status === 'success') {
                 if ($transaction->payment_method === 'balance') {
-                    $transaction->user->increment('balance', (float)$transaction->total_price);
+                    $transaction->user->increment('balance', $totalPrice);
                     
-                    // Record refund
                     BalanceTransaction::create([
                         'user_id' => $transaction->user_id,
                         'type' => 'credit',
-                        'amount' => $transaction->total_price,
+                        'amount' => $totalPrice,
                         'description' => 'Refund ' . $transaction->rentalUnit->name,
                         'reference' => $transaction->booking_code,
                         'metadata' => [
@@ -300,20 +331,19 @@ class BookingController extends Controller
                         ],
                     ]);
                 } elseif ($transaction->payment_method === 'paylater') {
-                    $transaction->user->paylaterAccount->decrement('used_limit', (float)$transaction->total_price);
+                    $transaction->user->paylaterAccount->decrement('used_limit', $totalPrice);
                 }
                 
                 $transaction->payment->update(['payment_status' => 'refunded']);
             }
 
             DB::commit();
-            // Redirect with success message
+
             return redirect()->route('member.order')
                 ->with('success', 'Booking berhasil dibatalkan');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            // Return error if payment fails
             return back()->with('error', 'Gagal membatalkan booking: ' . $e->getMessage());
         }
     }
