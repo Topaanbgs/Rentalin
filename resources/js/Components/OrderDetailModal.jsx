@@ -1,8 +1,8 @@
 import { router } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Clock, CreditCard, Package } from "lucide-react";
-import { formatCurrency } from "@/utils/formatCurrency";
-import { translateStatus } from "@/utils/statusTranslator";
+import { formatCurrency } from "@/Utils/formatCurrency";
+import { translateStatus } from "@/Utils/statusTranslator";
 
 export default function OrderDetailModal({ show, transaction, onClose }) {
     if (!show || !transaction) return null;
