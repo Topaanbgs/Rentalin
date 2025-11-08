@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { Wallet, CreditCard } from "lucide-react";
 import { useState } from "react";
 import MemberLayout from "@/Layouts/MemberLayout";
-import { translateStatus } from "@/utils/statusTranslator";
-import { formatCurrency } from "@/utils/formatCurrency";
+import { translateStatus } from "@/Utils/statusTranslator";
+import { formatCurrency } from "@/Utils/formatCurrency";
 
 export default function Index({ units, stats, activeBookings }) {
     const [selectedUnit, setSelectedUnit] = useState(null);

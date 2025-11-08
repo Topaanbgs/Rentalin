@@ -4,7 +4,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { useState } from "react";
 import MemberLayout from "@/Layouts/MemberLayout";
-import { formatCurrency } from "@/utils/formatCurrency.jsx";
+import { formatCurrency } from "@/Utils/formatCurrency";
 
 export default function Balance({ balance }) {
     const { auth } = usePage().props;

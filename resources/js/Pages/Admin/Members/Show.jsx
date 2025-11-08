@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { StatusBadge } from "@/Utils/statusTranslator";
 import { Head, router, Link } from "@inertiajs/react";
 import {
     ArrowLeft,
@@ -7,7 +8,6 @@ import {
     ShieldCheck,
     ShieldOff,
 } from "lucide-react";
-import { StatusBadge, translateStatus } from "@/Utils/statusTranslator";
 
 export default function Show({ member }) {
     const formatCurrency = (amount = 0) =>

@@ -1,8 +1,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { StatusBadge } from "@/Utils/statusTranslator";
 import { Head, router, Link, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import { Search, Filter, Eye, X, PlusCircle, DollarSign } from "lucide-react";
-import { StatusBadge } from "@/Utils/statusTranslator";
 
 export default function Index({ transactions, availableUnits, filters }) {
     const [search, setSearch] = useState(filters.search || "");

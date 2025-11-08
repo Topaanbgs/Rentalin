@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { Eye } from "lucide-react";
 import { useState } from "react";
 import MemberLayout from "@/Layouts/MemberLayout";
-import { StatusBadge } from "@/utils/statusTranslator";
-import { formatCurrency } from "@/utils/formatCurrency";
+import { StatusBadge } from "@/Utils/statusTranslator";
+import { formatCurrency } from "@/Utils/formatCurrency";
 import OrderDetailModal from "@/Components/OrderDetailModal";
 
 export default function Order({ transactions }) {

@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { StatusBadge } from "@/Utils/statusTranslator";
 import { Head, Link, router } from "@inertiajs/react";
 import {
     DollarSign,
@@ -7,7 +8,6 @@ import {
     Calendar,
     ArrowRight,
 } from "lucide-react";
-import { translateStatus, StatusBadge } from "@/Utils/statusTranslator";
 
 export default function Dashboard({
     stats,

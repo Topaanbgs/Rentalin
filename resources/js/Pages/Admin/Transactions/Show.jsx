@@ -1,7 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { StatusBadge } from "@/Utils/statusTranslator";
 import { Head, router, Link } from "@inertiajs/react";
 import { ArrowLeft, CheckCircle } from "lucide-react";
-import { StatusBadge } from "@/Utils/statusTranslator";
 
 const InfoItem = ({ label, value, children }) => (
     <div className="py-3 sm:py-4 px-4">

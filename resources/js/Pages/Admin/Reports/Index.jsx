@@ -1,7 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { StatusBadge } from "@/Utils/statusTranslator";
 import { Head, router, Link } from "@inertiajs/react";
 import { useState } from "react";
-import { StatusBadge, translateStatus } from "@/Utils/statusTranslator";
 import {
     Download,
     Calendar,

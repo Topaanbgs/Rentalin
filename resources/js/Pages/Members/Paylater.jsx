@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeCanvas } from "qrcode.react";
 import { useState } from "react";
 import MemberLayout from "@/Layouts/MemberLayout";
-import { formatCurrency } from "@/utils/formatCurrency";
+import { formatCurrency } from "@/Utils/formatCurrency";
 
 export default function Paylater({ paylater_account, invoices, user }) {
     const [showPopup, setShowPopup] = useState(false);

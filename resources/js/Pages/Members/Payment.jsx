@@ -4,7 +4,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import MemberLayout from "@/Layouts/MemberLayout";
-import { formatCurrency } from "@/utils/formatCurrency";
+import { formatCurrency } from "@/Utils/formatCurrency";
 
 export default function Payment({ transaction, user }) {
     const [selectedMethod, setSelectedMethod] = useState(null);

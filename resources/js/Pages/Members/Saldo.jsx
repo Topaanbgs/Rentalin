@@ -1,7 +1,7 @@
 import { usePage, router, Head } from "@inertiajs/react";
 import { Wallet, PlusCircle, ArrowLeftRight, ArrowLeft } from "lucide-react";
 import MemberLayout from "@/Layouts/MemberLayout";
-import { formatCurrency } from "@/utils/formatCurrency";
+import { formatCurrency } from "@/Utils/formatCurrency";
 
 export default function Saldo({ balance, transactions = [] }) {
     const { auth } = usePage().props;
